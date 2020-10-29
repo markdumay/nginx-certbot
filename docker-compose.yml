@@ -14,12 +14,7 @@ volumes:
 
 services:
     certbot:
-        # image: certbot/dns-${CERTBOT_DNS_PLUGIN}
-        build:
-            dockerfile: Dockerfile
-            context: ./config/certbot
-            args:
-                dns_plugin: ${CERTBOT_DNS_PLUGIN}
+        image: markdumay/certbot-${CERTBOT_DNS_PLUGIN}
         restart: unless-stopped
         networks:
             - certbot
