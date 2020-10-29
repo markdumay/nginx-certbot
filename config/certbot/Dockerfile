@@ -1,6 +1,6 @@
 # Pull base image for specified DNS plugin
-ARG dns_plugin
-FROM certbot/dns-${dns_plugin}
+ARG CERTBOT_DNS_PLUGIN
+FROM certbot/dns-${CERTBOT_DNS_PLUGIN}
 
 # Copy helper script
 COPY certbot_issue.sh /usr/local/bin/certbot_issue.sh
