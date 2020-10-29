@@ -35,10 +35,7 @@ services:
             - dns_cloudflare_api_token
 
     nginx:
-        # image: "nginx:alpine"
-        build:
-            dockerfile: Dockerfile
-            context: ./config/nginx
+        image: markdumay/nginx-unprivileged:latest
         ports:
             - ${HOST_PORT_HTTP}:8080
             - ${HOST_PORT_HTTPS}:4430
