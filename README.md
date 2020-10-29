@@ -1,2 +1,2 @@
-# nginx-certbot
-Automatically Renew Certificates For an Unprivileged Nginx Web Server (work in progress)
+# nginx-certbot (work in progress)
+Automatically Renew Certificates For an Unprivileged Nginx Web Server
