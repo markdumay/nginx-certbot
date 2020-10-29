@@ -1,0 +1,53 @@
+version: "3.7"
+
+secrets:
+    dns_cloudflare_api_token:
+        file: secrets/dns_cloudflare_api_token
+        # external: true
+
+networks:
+    certbot:
+    portal:
+
+volumes:
+    certs:
+
+services:
+    certbot:
+        # image: certbot/dns-${CERTBOT_DNS_PLUGIN}
+        build:
+            dockerfile: Dockerfile
+            context: ./config/certbot
+            args:
+                dns_plugin: ${CERTBOT_DNS_PLUGIN}
+        restart: unless-stopped
+        networks:
+            - certbot
+        volumes:
+            - certs:/etc/certbot
+        environment:
+            - CERTBOT_DNS_PLUGIN=${CERTBOT_DNS_PLUGIN}
+            - CERTBOT_DNS_PROPAGATION_SECONDS=${CERTBOT_DNS_PROPAGATION_SECONDS}
+            - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
+            - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+            - CERTBOT_DEPLOYMENT=${CERTBOT_DEPLOYMENT}
+        secrets:
+            - dns_cloudflare_api_token
+
+    nginx:
+        # image: "nginx:alpine"
+        build:
+            dockerfile: Dockerfile
+            context: ./config/nginx
+        ports:
+            - ${HOST_PORT_HTTP}:8080
+            - ${HOST_PORT_HTTPS}:4430
+        networks:
+            - portal
+        volumes:
+            - certs:/etc/certbot:ro
+            - ./config/nginx/templates:/etc/nginx/templates:ro
+        environment:
+            - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
+            - NGINX_PORT_HTTP=${NGINX_PORT_HTTP}
+            - NGINX_PORT_HTTPS=${NGINX_PORT_HTTPS}
