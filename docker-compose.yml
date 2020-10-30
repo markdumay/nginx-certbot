@@ -14,7 +14,7 @@ volumes:
 
 services:
     certbot:
-        image: markdumay/certbot-${CERTBOT_DNS_PLUGIN}
+        image: markdumay/certbot-${CERTBOT_DNS_PLUGIN}:latest
         restart: unless-stopped
         networks:
             - certbot
