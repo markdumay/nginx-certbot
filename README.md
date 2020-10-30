@@ -286,18 +286,18 @@ Run the following command to inspect the status of the Docker Stack.
 docker stack services nginx-certbot
 ```
 
-<!-- TODO: update -->
 You should see the value `1/1` for `REPLICAS` for the certbot and nginx services if the stack was initialized correctly. It might take a while before the services are up and running, so simply repeat the command after a few minutes if needed.
 
 ```
-ID  NAME                MODE        REPLICAS    IMAGE                               PORTS
-*** nginx-certbot_xxx   replicated  1/1         markdumay/nginx-certbot:xxx
-*** nginx-certbot_xxx   replicated  1/1         markdumay/nginx-certbot:xxx
+ID  NAME                   MODE        REPLICAS  IMAGE                                PORTS
+*** nginx-certbot_certbot  replicated  1/1       markdumay/certbot-cloudflare:latest  
+*** nginx-certbot_nginx    replicated  1/1       markdumay/nginx-unprivileged:latest  *:443->4430/tcp, *:80->8080/tcp
+
 ```
 
-You can view the service log with `docker service logs nginx-certbot_xxx` once the service is up and running. Refer to the paragraph <a href="#step-4---run-with-docker-compose">Step 4 - Run with Docker Compose</a> for validation of the logs.
+You can view the service logs with `docker service logs nginx-certbot_certbot` or `docker service logs nginx-certbot_nginx` once the services are up and running. Refer to the paragraph <a href="#step-4---run-with-docker-compose">Step 4 - Run with Docker Compose</a> for validation of the logs.
 
-Debugging swarm services can be quite tedious. If for some reason your service does not initiate properly, you can get its task ID with `docker service ps nginx-certbot_xxx`. Running `docker inspect <task-id>` might give you some clues to what is happening. Use `docker stack rm nginx-certbot` to remove the docker stack entirely.
+Debugging swarm services can be quite tedious. If for some reason your service does not initiate properly, you can get its task ID with `docker service ps nginx-certbot_certbot` or `docker service ps nginx-certbot_nginx`. Running `docker inspect <task-id>` might give you some clues to what is happening. Use `docker stack rm nginx-certbot` to remove the docker stack entirely.
 
 
 ## Usage
@@ -309,7 +309,7 @@ curl localhost
 
 In case of errors, test if the web server is available from within the `nginx` container. Run the following command from your host,  updating the internal port `8080` if needed.
 ```
-docker exec -it nginx-certbot_xxx curl localhost:8080
+docker exec -it nginx-certbot_nginx curl localhost:8080
 ```
 
 ### Configuring a Secure Web Server
