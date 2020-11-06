@@ -1,3 +1,4 @@
 #!/bin/bash
 
-docker build -t $IMAGE_NAME --build-arg CERTBOT_DNS_PLUGIN=$CERTBOT_DNS_PLUGIN .
+# pass selected DNS plugin as build argument
+docker build -t "${IMAGE_NAME}" --build-arg CERTBOT_DNS_PLUGIN="${CERTBOT_DNS_PLUGIN}" .

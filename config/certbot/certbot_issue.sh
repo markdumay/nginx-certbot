@@ -3,8 +3,8 @@
 # Title         : certbot_issue.sh
 # Description   : Runs certbot to issue or renew a wildcard certificate provided by Let's Encrypt
 # Author        : Mark Dumay
-# Date          : October 26th, 2020
-# Version       : 0.5
+# Date          : November 6th, 2020
+# Version       : 0.9
 # Usage         : certbot_issue.sh
 # Repository    : 
 # Comments      : Expects the following environment variables: CERTBOT_DNS_PLUGIN, CERTBOT_DOMAIN, CERTBOT_EMAIL, and
@@ -22,8 +22,8 @@
 readonly RED='\e[31m' # Red color
 readonly NC='\e[m' # No color / reset
 readonly BOLD='\e[1m' #Bold font
-LOG_FILE='/var/log/certbot/letsencrypt.log'
-LOG_PREFIX="$(date -u '+%F %T,%3N'):INFO:certbot_issue.sh:"
+readonly LOG_FILE='/var/log/certbot/letsencrypt.log'
+readonly LOG_PREFIX="$(date -u '+%F %T,%3N'):INFO:certbot_issue.sh:"
 readonly SECRET_PATH="${HOME}/.secrets/certbot"
 readonly DNS_PLUGINS="cloudflare cloudxns digitalocean dnsimple dnsmadeeasy gehirn google linode luadns nsone \
     ovh rfc2136 route53 sakuracloud"
@@ -323,10 +323,7 @@ run_certbot() {
         set -- "$@" --dry-run 
         set -- "$@" --test-cert
     fi
-    # 2>&1
 
-    # TODO: debugging
-    # echo "$@"
     "$@"
     
     [ "$?" != 0 ] && terminate "Certbot failed, please check correct installation and verify parameters"
