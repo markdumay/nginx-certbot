@@ -40,7 +40,7 @@ if [ "$1" = "nginx" ] || [ "$1" = "nginx-debug" ]; then
 fi
 
 # wait for certificates to become available
-readonly CERT_PATH="/etc/letsencrypt/live/${CERTBOT_DOMAIN}"
+readonly CERT_PATH="/etc/certbot/live/${CERTBOT_DOMAIN}"
 while [ ! -f "${CERT_PATH}/fullchain.pem" ] || [ ! -f "${CERT_PATH}/privkey.pem" ]
 do
     echo >&3 "$0: Waiting for certificates ('${CERT_PATH}')"
