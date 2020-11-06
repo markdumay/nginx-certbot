@@ -27,5 +27,5 @@ USER certbot
 # Expose the certificates folder as volume
 VOLUME [ "/etc/certbot" ]
 
-# Run certbot script and repeat every 12 hours
+# Run certbot script (repeats every 12 hours)
 ENTRYPOINT [ "docker_entrypoint.sh" ]

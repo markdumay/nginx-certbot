@@ -42,7 +42,6 @@ fi
 # wait for certificates to become available
 readonly CERT_PATH="/etc/letsencrypt/live/${CERTBOT_DOMAIN}"
 while [ ! -f "${CERT_PATH}/fullchain.pem" ] || [ ! -f "${CERT_PATH}/privkey.pem" ]
-# while ! ls -A "/etc/letsencrypt/live/${CERTBOT_DOMAIN}" > /dev/null 2>&1 ;
 do
     echo >&3 "$0: Waiting for certificates ('${CERT_PATH}')"
     sleep 30
