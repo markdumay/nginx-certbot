@@ -1,5 +1,6 @@
 # dotenv environment variables file
 .env
+prod.env
 
 # Persistent data
 data/
