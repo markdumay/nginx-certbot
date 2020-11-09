@@ -253,7 +253,6 @@ printf 0123456789abcdef0123456789abcdef01234567 | docker secret create dns_cloud
 
 If you do not feel comfortable copying secrets from your command line, you can use the wrapper `create_secret.sh`. This script prompts for a secret and ensures sensitive data is not displayed on your console. The script is available in the folder `/docker-secret` of your repository.
 
-<!-- TODO: add repository module -->
 ```console
 ./create_secret.sh dns_cloudflare_api_token
 ```
@@ -316,11 +315,11 @@ docker exec -it nginx-certbot_nginx curl localhost:8080
 Add support for an encrypted server once the basic web server is up and running. Create a new file `nginx/templates/example.com.conf.template`, renaming `example.com` to your domain. Below configuration redirects all HTTP traffic to HTTPS, and redirects `www.example.com` to `example.com`. Restart the Docker services/stack to initialize the new server.
 
 ```
-# Redirect HTTP traffic to HTTPS
+# Redirect all non-encrypted to encrypted traffic
 server {
-    listen NGINX_PORT_HTTP;
-    listen [::]:NGINX_PORT_HTTP;
     server_name ${CERTBOT_DOMAIN};
+    listen ${NGINX_PORT_HTTP};
+    listen [::]:${NGINX_PORT_HTTP};
 
     location / {
         return 301 https://$server_name$request_uri;
@@ -329,11 +328,11 @@ server {
 
 # Redirect all www to non-www
 server {
-    listen NGINX_PORT_HTTP;
-    listen [::]:NGINX_PORT_HTTP;
-    listen NGINX_PORT_HTTPS ssl http2;
-    listen [::]:NGINX_PORT_HTTPS ssl http2 ipv6only=on;
     server_name www.${CERTBOT_DOMAIN};
+    listen ${NGINX_PORT_HTTP};
+    listen [::]:${NGINX_PORT_HTTP};
+    listen ${NGINX_PORT_HTTPS} ssl http2;
+    listen [::]:${NGINX_PORT_HTTPS} ssl http2;
 
     # Configure certificate and session
     ssl_certificate /etc/certbot/live/${CERTBOT_DOMAIN}/fullchain.pem;
@@ -344,9 +343,9 @@ server {
 
 # Handle HTTPS requests
 server {
-    listen NGINX_PORT_HTTPS ssl http2;
-    listen [::]:NGINX_PORT_HTTPS ssl http2 ipv6only=on;
     server_name ${CERTBOT_DOMAIN};
+    listen ${NGINX_PORT_HTTPS} ssl http2;
+    listen [::]:${NGINX_PORT_HTTPS} ssl http2;
 
     # Configure certificate and session
     ssl_certificate /etc/certbot/live/${CERTBOT_DOMAIN}/fullchain.pem;
