@@ -253,7 +253,6 @@ printf 0123456789abcdef0123456789abcdef01234567 | docker secret create dns_cloud
 
 If you do not feel comfortable copying secrets from your command line, you can use the wrapper `create_secret.sh`. This script prompts for a secret and ensures sensitive data is not displayed on your console. The script is available in the folder `/docker-secret` of your repository.
 
-<!-- TODO: add repository module -->
 ```console
 ./create_secret.sh dns_cloudflare_api_token
 ```
