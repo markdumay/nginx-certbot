@@ -1,4 +1,5 @@
 # Pull base image
+ARG UID=1001
 FROM nginx:alpine 
 
 # Copy default nginx configuration and web page
@@ -8,7 +9,8 @@ COPY ./index.html /var/www/html/index.html
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 
 # Assign access rights for key files and folders
-RUN addgroup -g 1001 -S www && adduser --uid 1001 -S www -G www && \
+ARG UID
+RUN addgroup -g "${UID}" -S www && adduser --uid "${UID}" -S www -G www && \
     touch /var/run/nginx.pid && \ 
     mkdir -p /etc/letsencrypt && \
     mkdir -p /var/www/html && \
