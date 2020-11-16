@@ -2,8 +2,7 @@ version: "3.7"
 
 secrets:
     dns_cloudflare_api_token:
-        file: secrets/dns_cloudflare_api_token
-        # external: true
+        external: true
 
 networks:
     certbot:

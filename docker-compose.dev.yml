@@ -1,0 +1,17 @@
+secrets:
+    dns_cloudflare_api_token:
+        file: secrets/dns_cloudflare_api_token.dev
+        external: false
+
+services:
+    certbot:
+        build:
+            dockerfile: Dockerfile
+            context: ./config/certbot
+            args:
+                CERTBOT_DNS_PLUGIN: ${CERTBOT_DNS_PLUGIN}
+
+    nginx:
+        build:
+            dockerfile: Dockerfile
+            context: ./config/nginx
