@@ -3,10 +3,10 @@
 # Title         : certbot_issue.sh
 # Description   : Runs certbot to issue or renew a wildcard certificate provided by Let's Encrypt
 # Author        : Mark Dumay
-# Date          : November 6th, 2020
+# Date          : November 16th, 2020
 # Version       : 0.9
 # Usage         : certbot_issue.sh
-# Repository    : 
+# Repository    : https://github.com/markdumay/nginx-certbot
 # Comments      : Expects the following environment variables: CERTBOT_DNS_PLUGIN, CERTBOT_DOMAIN, CERTBOT_EMAIL, and
 #                 CERTBOT_DEPLOYMENT. The variable CERTBOT_DNS_PROPAGATION_SECONDS is optional and defaults to 30 
 #                 seconds. DNS credentials should be present as either Docker secret or environment variable. The
