@@ -8,5 +8,11 @@ data/
 # Secrets folder for testing purposes
 secrets/
 
+# Log files
+log/
+
 # Local filesystem files
 .DS_Store
+
+# Temporary helper script
+ddm.sh
