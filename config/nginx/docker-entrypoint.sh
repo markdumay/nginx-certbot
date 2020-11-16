@@ -98,10 +98,14 @@ reload_nginx_on_change() {
             [ "${new_incoming_checksum}" != "${prev_incoming_checksum}" ]; then
             
             echo >&3 "$0: Changes detected, reconfiguring sites"
-            rm -rf "${NGINX_CONF_DIR}"/*.conf "${NGINX_SNIPPETS_DIR}"/*.conf || true # remove existing configurations
-            \cp -r "${NGINX_TEMPLATES_DIR}"/snippets/*.conf "${NGINX_SNIPPETS_DIR}"/ # copy incoming snippets
-            "${NGINX_TEMPLATE_CMD}" # regenerate configurations based on templates
+            # remove existing configurations
+            rm -rf "${NGINX_CONF_DIR}"/*.conf "${NGINX_SNIPPETS_DIR}"/*.conf || true
+            # copy incoming snippets
+            \cp -r "${NGINX_TEMPLATES_DIR}"/snippets/*.conf "${NGINX_SNIPPETS_DIR}"/ 2>/dev/null || true
+            # regenerate configurations based on templates and update checksum
+            "${NGINX_TEMPLATE_CMD}"
             prev_incoming_checksum="${new_incoming_checksum}"
+            # reload nginx
             "$1" -t && "$1" -s reload
         # reload nginx to use renewed cerfificates
         elif [ "${new_cert_checksum}" != "${prev_cert_checksum}" ]; then
