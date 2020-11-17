@@ -3,7 +3,7 @@
 # Title         : certbot_issue.sh
 # Description   : Runs certbot to issue or renew a wildcard certificate provided by Let's Encrypt
 # Author        : Mark Dumay
-# Date          : November 16th, 2020
+# Date          : November 17th, 2020
 # Version       : 0.9
 # Usage         : certbot_issue.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
@@ -324,9 +324,7 @@ run_certbot() {
         set -- "$@" --test-cert
     fi
 
-    "$@"
-    
-    [ "$?" != 0 ] && terminate "Certbot failed, please check correct installation and verify parameters"
+    "$@" || terminate "Certbot failed, please check correct installation and verify parameters"
 }
 
 #======================================================================================================================
