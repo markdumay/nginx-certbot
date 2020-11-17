@@ -41,18 +41,18 @@ launch_entrypoint_scripts() {
 
         echo >&3 "$0: Looking for shell scripts in ${ENTRYPOINT_PATH}/"
         find "${ENTRYPOINT_PATH}/" -follow -type f -print | sort -n | while read -r f; do
-            case "$f" in
+            case "${f}" in
                 *.sh)
-                    if [ -x "$f" ]; then
+                    if [ -x "${f}" ]; then
                         echo >&3 "$0: Launching $f"
-                        "$f"
+                        "${f}"
                     else
                         # warn on shell scripts without exec bit
-                        echo >&3 "$0: Ignoring $f, not executable"
+                        echo >&3 "$0: Ignoring ${f}, not executable"
                     fi
                     ;;
                 *) 
-                    echo >&3 "$0: Ignoring $f"
+                    echo >&3 "$0: Ignoring ${f}"
                     ;;
             esac
         done
