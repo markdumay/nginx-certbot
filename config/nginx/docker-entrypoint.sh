@@ -4,8 +4,8 @@
 # Description   : Launches Nginx using server configuration templates. The execution starts once certificates are 
 #                 available. Nginx is reloaded automatically on updated templates or certificates.
 # Author        : Mark Dumay
-# Date          : November 11th, 2020
-# Version       : 0.5
+# Date          : November 17th, 2020
+# Version       : 0.9
 # Usage         : docker-entrypoint.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
 # Comments      : 
@@ -36,7 +36,7 @@ polling_interval="${NGINX_POLLING_INTERVAL:-60}" # seconds
 #   Generated server configurations in '/etc/nginx/conf.d', plus output from additionally defined entrypoint scripts.
 #======================================================================================================================
 launch_entrypoint_scripts() {
-    if find "${ENTRYPOINT_PATH}/" -mindepth 1 -maxdepth 1 -type f -print -quit 2>/dev/null | read -r v; then
+    if find "${ENTRYPOINT_PATH}/" -mindepth 1 -maxdepth 1 -type f -print -quit 2>/dev/null | read -r; then
         echo >&3 "$0: ${ENTRYPOINT_PATH}/ is not empty, will attempt to perform configuration"
 
         echo >&3 "$0: Looking for shell scripts in ${ENTRYPOINT_PATH}/"
