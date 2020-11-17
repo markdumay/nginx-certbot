@@ -20,8 +20,12 @@ readonly NGINX_CONF_DIR='/etc/nginx/conf.d'
 readonly NGINX_SNIPPETS_DIR='/etc/nginx/snippets'
 readonly NGINX_TEMPLATES_DIR='/etc/nginx/templates'
 readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
-# readonly POLLING_INTERVAL=60  # seconds
-readonly POLLING_INTERVAL=5  # TODO: temp
+
+
+#======================================================================================================================
+# Variables
+#======================================================================================================================
+polling_interval="${NGINX_POLLING_INTERVAL:-60}" # seconds
 
 #======================================================================================================================
 # Launches any initial entrypoints scripts available in '/docker-entrypoint.d/' (source code is copied from the Nginx 
@@ -64,7 +68,7 @@ launch_entrypoint_scripts() {
 # '/etc/certbot/live/${CERTBOT_DOMAIN}' for any changes. Observed files should have a '.template' or '.conf' suffix.
 # In case a template has been changed, has been added, or has been removed, existing server configurations are removed 
 # entirely and recreated. Nginx is reloaded once the templates have been processed, or when a modified certificate is 
-# detected. The polling interval is set to one minute.
+# detected. The polling interval is set to one minute by default.
 #======================================================================================================================
 # Outputs:
 #   Updated server configurations in '/etc/nginx/conf.d' and snippets in '/etc/nginx/snippets'; reloaded Nginx process.
@@ -75,7 +79,7 @@ reload_nginx_on_change() {
     prev_cert_checksum=$(find -L "${CERT_PATH}"/*.pem -type f -exec md5sum {} \; -maxdepth 1 2>/dev/null | sort)
     while true
     do 
-        sleep "${POLLING_INTERVAL}"
+        sleep "${polling_interval}"
 
         # scan for any new templates or certificates
         current_config=$(cd "${NGINX_CONF_DIR}" && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
@@ -117,7 +121,7 @@ reload_nginx_on_change() {
 
 #======================================================================================================================
 # Waits for certificates in the folder '/etc/certbot/live/${CERTBOT_DOMAIN}' to become available. This prevents 
-# starting Nginx prematurely. The polling interval is set to one minute.
+# starting Nginx prematurely. The polling interval is set to one minute by default.
 #======================================================================================================================
 # Outputs:
 #   Paused script execution until certificates are available.
@@ -126,7 +130,7 @@ wait_for_certificates() {
     while [ ! -f "${CERT_PATH}/fullchain.pem" ] || [ ! -f "${CERT_PATH}/privkey.pem" ]
     do
         echo >&3 "$0: Waiting for certificates ('${CERT_PATH}')"
-        sleep "${POLLING_INTERVAL}"
+        sleep "${polling_interval}"
     done
 }
 
