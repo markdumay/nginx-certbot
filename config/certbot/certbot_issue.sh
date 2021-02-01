@@ -38,6 +38,7 @@ readonly CONFIG_DIR='/etc/certbot'
 #======================================================================================================================
 dns_prefix=''
 dns_propagation='true'
+command=''
 step=0
 total_steps=0
 
@@ -45,6 +46,25 @@ total_steps=0
 #======================================================================================================================
 # Helper Functions
 #======================================================================================================================
+
+#=======================================================================================================================
+# Display usage message.
+#=======================================================================================================================
+# Globals:
+#   - backup_dir
+# Outputs:
+#   Writes message to stdout.
+#=======================================================================================================================
+usage() { 
+    echo 'Script to issue a Let''s Encrypt wildcard certificate via certbot'
+    echo 
+    echo "Usage: $0 COMMAND [OPTIONS]" 
+    echo
+    echo 'Commands:'
+    echo '  init                   Initialize the environment and configuration'
+    echo '  run                    Issue the certificate'
+    echo
+}
 
 #======================================================================================================================
 # Displays error message on console and log file, terminate with non-zero error.
@@ -93,8 +113,39 @@ log() {
     fi
 }
 
+#=======================================================================================================================
+# Parse and validate the command-line arguments.
+#=======================================================================================================================
+# Globals:
+#   - command
+# Arguments:
+#   $@ - All available command-line arguments.
+# Outputs:
+#   Writes warning or error to stdout if applicable, terminates with non-zero exit code on fatal error.
+#=======================================================================================================================
+parse_args() {
+    # Process and validate command-line arguments
+    while [ -n "$1" ]; do
+        case "$1" in
+            init ) command="$1";;
+            run  ) command="$1";;
+            *    ) usage; terminate "Unrecognized command ($1)"
+        esac
+        shift
+    done
+
+    # Validate arguments
+    fatal_error=''
+    # Requirement 1 - a single value command is provided
+    if [ -z "${command}" ]; then fatal_error="Expected command"
+    fi
+
+    # Inform user and terminate on fatal error
+    [ -n "${fatal_error}" ] && usage && terminate "${fatal_error}"
+}
+
 #======================================================================================================================
-# Validates if a specific (case-sensitive) string element exists in an array. This is a helper function, as POSIX-\
+# Validates if a specific (case-sensitive) string element exists in an array. This is a helper function, as POSIX-
 # compliant shell scripts do not support arrays natively. The pseudo array expects spaces as separator.
 #======================================================================================================================
 # Arguments:
@@ -332,10 +383,25 @@ run_certbot() {
 # runs the certbot to issue/renew the certificate.
 #======================================================================================================================
 main() {
-    total_steps=3
-    init_env
-    generate_certbot_config
-    run_certbot
+    # Parse arguments
+    parse_args "$@"
+
+    # Execute workflows
+    case "${command}" in
+        init )
+            total_steps=2
+            init_env
+            generate_certbot_config
+            ;;
+        run  )
+            total_steps=1
+            run_certbot
+            ;;
+        *)       
+            terminate 'Invalid command'
+    esac
+
+    echo 'Done.'
 }
 
 main "$@"
