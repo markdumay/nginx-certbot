@@ -1,46 +1,51 @@
+# Copyright © 2021 Mark Dumay. All rights reserved.
+# Use of this source code is governed by The MIT License (MIT) that can be found in the LICENSE file.
+
 version: "3.7"
 
 secrets:
-    dns_cloudflare_api_token:
-        external: true
+  dns_cloudflare_api_token:
+    file: secrets/dns_cloudflare_api_token
+    external: false
 
 networks:
-    certbot:
-    portal:
+  certbot:
+  portal:
 
 volumes:
-    certs:
-    templates:
+  certs:
+  templates:
 
 services:
-    certbot:
-        image: markdumay/certbot-${CERTBOT_DNS_PLUGIN}:latest
-        restart: unless-stopped
-        networks:
-            - certbot
-        volumes:
-            - certs:/etc/certbot
-        environment:
-            - CERTBOT_DNS_PLUGIN=${CERTBOT_DNS_PLUGIN}
-            - CERTBOT_DNS_PROPAGATION_SECONDS=${CERTBOT_DNS_PROPAGATION_SECONDS}
-            - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
-            - CERTBOT_EMAIL=${CERTBOT_EMAIL}
-            - CERTBOT_DEPLOYMENT=${CERTBOT_DEPLOYMENT}
-        secrets:
-            - dns_cloudflare_api_token
+  certbot:
+    image: "markdumay/certbot-${CERTBOT_DNS_PLUGIN}:${BUILD_VERSION:?version}${IMAGE_SUFFIX:-}"
+    restart: unless-stopped
+    networks:
+      - certbot
+    volumes:
+      - certs:/etc/certbot
+    environment:
+      - CERTBOT_DNS_PLUGIN=${CERTBOT_DNS_PLUGIN}
+      - CERTBOT_DNS_PROPAGATION_SECONDS=${CERTBOT_DNS_PROPAGATION_SECONDS}
+      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+      - CERTBOT_DEPLOYMENT=${CERTBOT_DEPLOYMENT}
+    secrets:
+      - dns_cloudflare_api_token
 
-    nginx:
-        image: markdumay/nginx-unprivileged:latest
-        ports:
-            - ${HOST_PORT_HTTP}:8080
-            - ${HOST_PORT_HTTPS}:4430
-        networks:
-            - portal
-        volumes:
-            - certs:/etc/certbot:ro
-            - templates:/etc/nginx/templates
-        environment:
-            - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
-            - NGINX_PORT_HTTP=${NGINX_PORT_HTTP}
-            - NGINX_PORT_HTTPS=${NGINX_PORT_HTTPS}
-            - NGINX_POLLING_INTERVAL=${NGINX_POLLING_INTERVAL}
+  nginx:
+    image: "markdumay/nginx-unprivileged:${BUILD_VERSION:?version}${IMAGE_SUFFIX:-}"
+    restart: unless-stopped
+    ports:
+      - ${HOST_PORT_HTTP}:8080
+      - ${HOST_PORT_HTTPS}:4430
+    networks:
+      - portal
+    volumes:
+      - certs:/etc/certbot:ro
+      - templates:/etc/nginx/templates
+    environment:
+      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
+      - NGINX_PORT_HTTP=${NGINX_PORT_HTTP}
+      - NGINX_PORT_HTTPS=${NGINX_PORT_HTTPS}
+      - NGINX_POLLING_INTERVAL=${NGINX_POLLING_INTERVAL}

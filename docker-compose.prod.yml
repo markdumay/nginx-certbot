@@ -1,0 +1,23 @@
+# Copyright © 2021 Mark Dumay. All rights reserved.
+# Use of this source code is governed by The MIT License (MIT) that can be found in the LICENSE file.
+
+version: "3.7"
+
+services:
+  certbot:
+    build:
+      dockerfile: ./config/certbot/Dockerfile
+      context: .
+      args:
+          BUILD_VERSION: "${BUILD_VERSION}"
+          UID: "${UID}"
+          GID: "${GID}"
+
+  nginx:
+    build:
+      dockerfile: ./config/nginx/Dockerfile
+      context: .
+      args:
+          BUILD_VERSION: "${BUILD_VERSION}"
+          UID: "${UID}"
+          GID: "${GID}"

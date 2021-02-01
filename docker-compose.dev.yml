@@ -1,17 +1,19 @@
+# Copyright © 2021 Mark Dumay. All rights reserved.
+# Use of this source code is governed by The MIT License (MIT) that can be found in the LICENSE file.
+
 secrets:
-    dns_cloudflare_api_token:
-        file: secrets/dns_cloudflare_api_token.dev
-        external: false
+  dns_cloudflare_api_token:
+    file: secrets/dns_cloudflare_api_token.dev
+    external: false
 
 services:
-    certbot:
-        build:
-            dockerfile: Dockerfile
-            context: ./config/certbot
-            args:
-                CERTBOT_DNS_PLUGIN: ${CERTBOT_DNS_PLUGIN}
+  certbot:
+    build:
+      args:
+        CERTBOT_DNS_PLUGIN: ${CERTBOT_DNS_PLUGIN}
+        BUILD_FLAG: --add-shell
 
-    nginx:
-        build:
-            dockerfile: Dockerfile
-            context: ./config/nginx
+  nginx:
+    build:
+      args:
+        BUILD_FLAG: --add-shell
