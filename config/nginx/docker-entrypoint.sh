@@ -97,6 +97,9 @@ launch_entrypoint_scripts() {
 # entirely and recreated. Nginx is reloaded once the templates have been processed, or when a modified certificate is 
 # detected. The polling interval is set to one minute by default.
 #=======================================================================================================================
+# Globals:
+#  - boot_failure
+#  - polling_interval
 # Outputs:
 #   Updated server configurations in '/etc/nginx/conf.d' and snippets in '/etc/nginx/snippets'; reloaded Nginx process.
 #=======================================================================================================================
@@ -112,8 +115,8 @@ reload_nginx_on_change() {
         current_config=$(cd "${NGINX_CONF_DIR}" && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
         current_snippets=$(cd "${NGINX_SNIPPETS_DIR}" && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
         if [ -d "${NGINX_TEMPLATES_DIR}"/snippets ]; then
-            snippet_config=$(cd "${NGINX_TEMPLATES_DIR}"/snippets && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | \
-                sort)
+            snippet_config=$(cd "${NGINX_TEMPLATES_DIR}"/snippets && \
+                find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
         else
             snippet_config=''
         fi
@@ -143,7 +146,7 @@ reload_nginx_on_change() {
             prev_cert_checksum="${new_cert_checksum}"
             "$1" -t && "$1" -s reload
         fi
-    done    
+    done
 }
 
 #=======================================================================================================================
