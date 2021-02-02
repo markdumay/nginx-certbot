@@ -42,16 +42,20 @@ RUN apk update -f && \
     chmod +x /docker-entrypoint.sh && \
     chmod +x /usr/local/sbin/harden_alpine.sh && \
     /usr/local/sbin/harden_alpine.sh harden \
+        -U nginx \
         -n "${BUILD_USER}" \
         -u "${UID}" \
         -g "${GID}" \
+        -d /etc/letsencrypt \
         -d /etc/nginx/conf.d \
         -d /etc/nginx/snippets \
-        -d /etc/letsencrypt \
-        -d /var/www/html \
-        -d /var/run/nginx.pid \
         -d /var/cache/nginx \
+        -d /var/log/nginx \
+        -d /var/www/html \
         -d /tmp \
+        -f /var/run/nginx.pid \
+        -k nginx \
+        -k nginx-debug \
         "${BUILD_FLAG}" && \
     rm -f /usr/local/sbin/harden_alpine.sh
 
