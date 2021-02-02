@@ -27,8 +27,8 @@ COPY ./config/nginx/ffdhe2048.txt /etc/nginx/snippets/ffdhe2048.txt
 COPY ./config/nginx/templates /etc/nginx/templates
 COPY ./config/nginx/index.html /var/www/html/index.html 
 
-# Update grep package and assign access rights for key files and folders
-# Note: shadow package is needed to support higher UIDs/GIDsARG UID
+# Install shadow package and assign access rights for key files and folders
+# Note: the shadow package is needed to support higher UIDs/GIDs
 ARG UID
 ARG GID
 ARG BUILD_USER
@@ -66,7 +66,11 @@ VOLUME ["/etc/letsencrypt", "/etc/nginx/templates"]
 ARG BUILD_USER
 USER "${BUILD_USER}"
 
-# Call entrypoint of parent image
+# Start custom script:
+#  - configure nginx using templates
+#  - wait for cerficates
+#  - run nginx daemon in foreground
+#  - monitor for template changes, and reload if needed
 ENTRYPOINT ["/docker-entrypoint.sh", "nginx"]
 
 # Expose https and http ports (ports below 1024 are restricted to root only)
