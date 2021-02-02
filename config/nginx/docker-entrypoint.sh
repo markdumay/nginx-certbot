@@ -26,6 +26,33 @@ readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
 # Variables
 #=======================================================================================================================
 polling_interval="${NGINX_POLLING_INTERVAL:-60}" # seconds
+filename=$(basename "$0")
+
+
+#=======================================================================================================================
+# Displays a log message on console.
+#=======================================================================================================================
+# Arguments:
+#   $1 - Message to display.
+# Outputs:
+#   Writes log message to stdout.
+#=======================================================================================================================
+log() {
+    echo >&3 "${filename}: $1"
+}
+
+#=======================================================================================================================
+# Displays error message on console and terminates with non-zero error.
+#=======================================================================================================================
+# Arguments:
+#   $1 - Error message to display.
+# Outputs:
+#   Writes error message to stderr, non-zero exit code.
+#=======================================================================================================================
+terminate() {
+    echo >&3 "${filename}: ERROR: $1"
+    exit 1
+}
 
 #=======================================================================================================================
 # Launches any initial entrypoints scripts available in '/docker-entrypoint.d/' (source code is copied from the Nginx 
@@ -37,29 +64,29 @@ polling_interval="${NGINX_POLLING_INTERVAL:-60}" # seconds
 #=======================================================================================================================
 launch_entrypoint_scripts() {
     if find "${ENTRYPOINT_PATH}/" -mindepth 1 -maxdepth 1 -type f -print -quit 2>/dev/null | read -r; then
-        echo >&3 "$0: ${ENTRYPOINT_PATH}/ is not empty, will attempt to perform configuration"
+        log "${ENTRYPOINT_PATH}/ is not empty, will attempt to perform configuration"
 
-        echo >&3 "$0: Looking for shell scripts in ${ENTRYPOINT_PATH}/"
+        log "Looking for shell scripts in ${ENTRYPOINT_PATH}/"
         find "${ENTRYPOINT_PATH}/" -follow -type f -print | sort -n | while read -r f; do
             case "${f}" in
                 *.sh)
                     if [ -x "${f}" ]; then
-                        echo >&3 "$0: Launching $f"
+                        log "Launching $f"
                         "${f}"
                     else
                         # warn on shell scripts without exec bit
-                        echo >&3 "$0: Ignoring ${f}, not executable"
+                        log "Ignoring ${f}, not executable"
                     fi
                     ;;
                 *) 
-                    echo >&3 "$0: Ignoring ${f}"
+                    log "Ignoring ${f}"
                     ;;
             esac
         done
 
-        echo >&3 "$0: Configuration complete; ready for start up"
+        log "Configuration complete; ready for start up"
     else
-        echo >&3 "$0: No files found in ${ENTRYPOINT_PATH}/, skipping configuration"
+        log "No files found in '${ENTRYPOINT_PATH}/', skipping configuration"
     fi
 }
 
@@ -101,7 +128,7 @@ reload_nginx_on_change() {
             [ "${current_snippets}" != "${snippet_config}" ] || \
             [ "${new_incoming_checksum}" != "${prev_incoming_checksum}" ]; then
             
-            echo >&3 "$0: Changes detected, reconfiguring sites"
+            log "Changes detected, reconfiguring sites"
             # remove existing configurations
             rm -rf "${NGINX_CONF_DIR}"/*.conf "${NGINX_SNIPPETS_DIR}"/*.conf || true
             # copy incoming snippets
@@ -129,7 +156,7 @@ reload_nginx_on_change() {
 wait_for_certificates() {
     while [ ! -f "${CERT_PATH}/fullchain.pem" ] || [ ! -f "${CERT_PATH}/privkey.pem" ]
     do
-        echo >&3 "$0: Waiting for certificates ('${CERT_PATH}')"
+        log "Waiting for certificates ('${CERT_PATH}')"
         sleep "${polling_interval}"
     done
 }
