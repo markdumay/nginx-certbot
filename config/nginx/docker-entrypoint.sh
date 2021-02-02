@@ -4,7 +4,7 @@
 # Description   : Launches Nginx using server configuration templates. The execution starts once certificates are 
 #                 available. Nginx is reloaded automatically on updated templates or certificates.
 # Author        : Mark Dumay
-# Date          : January 17th, 2021
+# Date          : February 2nd, 2021
 # Version       : 0.9
 # Usage         : docker-entrypoint.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
@@ -14,6 +14,7 @@
 #=======================================================================================================================
 # Constants
 #=======================================================================================================================
+readonly BOOT_TIME=5 # time in seconds to wait for the nginx master and worker processes to have started
 readonly CERT_PATH="/etc/certbot/live/${CERTBOT_DOMAIN}"
 readonly ENTRYPOINT_PATH='/docker-entrypoint.d'
 readonly NGINX_CONF_DIR='/etc/nginx/conf.d'
@@ -150,9 +151,35 @@ reload_nginx_on_change() {
 }
 
 #=======================================================================================================================
+# Verifies nginx has started successfully. It validates the presence of at least one nginx worker process after a grace 
+# period for the boot process.
+#=======================================================================================================================
+# Outputs:
+#   Prints nginx status to stdout, terminates with non-zero exit code on eror.
+#=======================================================================================================================
+start_and_verify_nginx() {
+    # confirm command can be found
+    if ! command -v "$1" > /dev/null; then terminate "Command '$1' not found"; fi
+    
+    # start nginx and capture PID of the master process
+    log "Starting nginx..."
+    "$1" -g 'daemon off;' &
+    nginx_pid="$!"
+
+    # check at least one worker process is available after grace period and return the master PID accordingly
+    sleep "${BOOT_TIME}"
+    if ! pgrep -f 'nginx: worker process' > /dev/null 2>&1; then
+        nginx_pid=0
+        terminate "Error starting nginx"
+    fi
+}
+
+#=======================================================================================================================
 # Waits for certificates in the folder '/etc/certbot/live/${CERTBOT_DOMAIN}' to become available. This prevents 
 # starting Nginx prematurely. The polling interval is set to one minute by default.
 #=======================================================================================================================
+# Globals:
+#  - polling_interval
 # Outputs:
 #   Paused script execution until certificates are available.
 #=======================================================================================================================
@@ -168,22 +195,31 @@ wait_for_certificates() {
 # Entrypoint for the script.
 #=======================================================================================================================
 main() {
-    if [ "$1" = "nginx" ] || [ "$1" = "nginx-debug" ]; then
-        # configure logging redirection
-        set -e
-        if [ -z "${NGINX_ENTRYPOINT_QUIET_LOGS:-}" ]; then
-            exec 3>&1
-        else
-            exec 3>/dev/null
-        fi
+    # configure logging redirection
+    set -e
+    if [ -z "${NGINX_ENTRYPOINT_QUIET_LOGS:-}" ]; then
+        exec 3>&1
+    else
+        exec 3>/dev/null
+    fi
 
+    if [ "$1" = "nginx" ] || [ "$1" = "nginx-debug" ]; then
         # setup initial nginx configuration, including certificates
         rm -f "${NGINX_CONF_DIR}"/*.conf || true # remove any existing configurations at launch
         launch_entrypoint_scripts "$@"
         wait_for_certificates "$@"
 
-        # start nginx in foreground and scan for any configuration changes
-        "$1" -g 'daemon off;' & echo >&3 "$0: Started nginx" & reload_nginx_on_change "$@"
+        # start nginx and scan for any configuration changes
+        start_and_verify_nginx "$1"
+        if [ "${nginx_pid}" -gt 0 ]; then
+            log "nginx started successfully"
+            wait "${nginx_pid}" & reload_nginx_on_change "$@"
+        else
+            log "Unknown error"
+            exit 1
+        fi
+    else
+        terminate "Invalid command '$1'"
     fi
 }
 
