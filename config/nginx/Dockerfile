@@ -60,7 +60,7 @@ RUN apk update -f && \
     rm -f /usr/local/sbin/harden_alpine.sh
 
 # Define mountable directories (shared with certbot and other containers)
-VOLUME /etc/letsencrypt, /etc/nginx/templates
+VOLUME ["/etc/letsencrypt", "/etc/nginx/templates"]
 
 # Run the container as non-root user
 ARG BUILD_USER
