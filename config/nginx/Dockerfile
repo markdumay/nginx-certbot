@@ -63,7 +63,6 @@ RUN apk update -f && \
 VOLUME ["/etc/letsencrypt", "/etc/nginx/templates"]
 
 # Run the container as non-root user
-ARG BUILD_USER
 USER "${BUILD_USER}"
 
 # Start custom script:
