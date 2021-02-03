@@ -39,7 +39,7 @@
 
 
 ## About
-[Nginx][nginx_url] is a popular open-source web server and reverse proxy. This repository sets up Nginx as an unprivileged Docker container to make it more secure. Furthermore, it uses [certbot][certbot_url] to automatically install and renew Let's Encrypt certificates, enabling Nginx to act as an HTTPS server. Certbot is run as a root-less container too. The script uses a DNS-01 challenge to support automated installation and renewal of wildcard certificates. More than 10 different DNS providers are supported, or any DNS server supporting RFC 2136 Dynamic Updates.
+[Nginx][nginx_url] is a popular open-source web server and reverse proxy. This repository sets up Nginx as an unprivileged Docker container to make it more secure. Furthermore, it uses [certbot][certbot_url] to automatically install and renew Let's Encrypt certificates, enabling Nginx to act as an HTTPS server. Certbot is run as a root-less container too. Both containers use a hardened Linux Alpine image. The script uses a DNS-01 challenge to support automated installation and renewal of wildcard certificates. More than 10 different DNS providers are supported, or any DNS server supporting RFC 2136 Dynamic Updates.
 
 <!-- TODO: add tutorial deep-link 
 Detailed background information is available on the author's [personal blog][blog].
@@ -52,7 +52,7 @@ The project uses the following core software components:
 * [Nginx][nginx_url] - Open-source web server and reverse proxy.
 
 ## Prerequisites
-*Nginx-certbot* can run on any Docker-capable host. The setup has been tested locally on macOS Catalina and in production on a server running Ubuntu 20.04 LTS. DNS integration has been tested with Cloudflare, although other DNS plugins are supported too. Additional prerequisites are:
+*Nginx-certbot* can run on any Docker-capable host. The setup has been tested locally on macOS Big Sur and in production on a server running Ubuntu 20.04 LTS. DNS integration has been tested with Cloudflare, although other DNS plugins are supported too. Additional prerequisites are:
 
 * **A registered domain name is required** - A domain name is required to configure SSL certificates that will enable secure traffic to your web server.
 
@@ -83,17 +83,17 @@ mv sample.env .env
 The `.env` file specifies eight variables. Adjust them as needed:
 
 
-| Variable                            | Mandatory | Example            | Description |
-|-------------------------------------|-----------|--------------------|-------------|
-| **CERTBOT_DOMAIN**                  | Yes       | `example.com`      | Domain for which certbot will issue a wildcard certificate. Both `*.example.com` and `example.com` are issued. This means that, for example, `www.example.com` is covered by the certificate. However, `thisisa.subdomain.example.com` is not covered, as this requires a wildcard certificate for `*.subdomain.example.com`. |
-| **CERTBOT_EMAIL**                   | Yes       | `mail@example.com` | An administrative email account to receive notifications from Let's Encrypt on.
-| **CERTBOT_DNS_PLUGIN**              | Yes       | `cloudflare`       | A DNS provider supported by certbot. Supported values are [cloudflare][certbot-dns-cloudflare], [cloudxns][certbot-dns-cloudxns], [digitalocean][certbot-dns-digitalocean], [dnsimple][certbot-dns-dnsimple], [dnsmadeeasy][certbot-dns-dnsmadeeasy], [gehirn][certbot-dns-gehirn], [google][certbot-dns-google], [linode][certbot-dns-linode], [luadns][certbot-dns-luadns], [nsone][certbot-dns-nsone], [ovh][certbot-dns-ovh], [rfc2136][certbot-dns-rfc2136], [route53][certbot-dns-route53], and [sakuracloud][certbot-dns-sakuracloud]. Click on each link to identify the required account and/or token information. 
-| **CERTBOT_DNS_PROPAGATION_SECONDS** | No        | `30`               | The duration in seconds for which certbot will await the DNS provider to have propagated the DNS-01 challenge text records. Adjust the value if needed, as the default value for each DNS provider might be too short, resulting in a validation error.
-| **CERTBOT_DEPLOYMENT**              | Yes       | `test`             | Options are `test` or `production`. Use `test` for testing purposes to avoid hitting rate limits from Let's Encrypt. In test mode, no actual certificates are installed. |
-| **HOST_PORT_HTTP**                  | Yes       | `80`               | The host port to map the nginx web server to for HTTP traffic. The default value for HTTP traffic is port 80, which needs to be available on your host.
-| **HOST_PORT_HTTPS**                 | Yes       | `443`              | The host port to map the nginx web server to for secure, HTTPS traffic. The default value for HTTPS traffic is port 443, which needs to be available on your host.
-| **NGINX_PORT_HTTP**                 | Yes       | `8080`             | The internal port for HTTP traffic within the nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
-| **NGINX_PORT_HTTPS**                | Yes       | `4430`             | The internal port for HTTPS traffic within the nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
+| Variable                    | Mandatory | Example            | Description |
+|-----------------------------|-----------|--------------------|-------------|
+| **CERTBOT_DOMAIN**          | Yes       | `example.com`      | Domain for which certbot will issue a wildcard certificate. Both `*.example.com` and `example.com` are issued. This means that, for example, `www.example.com` is covered by the certificate. However, `thisisa.subdomain.example.com` is not covered, as this requires a wildcard certificate for `*.subdomain.example.com`. |
+| **CERTBOT_EMAIL**           | Yes       | `mail@example.com` | An administrative email account to receive notifications from Let's Encrypt on.
+| **CERTBOT_DNS_PLUGIN**      | Yes       | `cloudflare`       | A DNS provider supported by certbot. Supported values are [cloudflare][certbot-dns-cloudflare], [cloudxns][certbot-dns-cloudxns], [digitalocean][certbot-dns-digitalocean], [dnsimple][certbot-dns-dnsimple], [dnsmadeeasy][certbot-dns-dnsmadeeasy], [gehirn][certbot-dns-gehirn], [google][certbot-dns-google], [linode][certbot-dns-linode], [luadns][certbot-dns-luadns], [nsone][certbot-dns-nsone], [ovh][certbot-dns-ovh], [rfc2136][certbot-dns-rfc2136], [route53][certbot-dns-route53], and [sakuracloud][certbot-dns-sakuracloud]. Click on each link to identify the required account and/or token information. 
+| **CERTBOT_DNS_PROPAGATION** | No        | `30`               | The duration in seconds for which certbot will await the DNS provider to have propagated the DNS-01 challenge text records. Adjust the value if needed, as the default value for each DNS provider might be too short, resulting in a validation error.
+| **CERTBOT_DEPLOYMENT**      | Yes       | `test`             | Options are `test` or `production`. Use `test` for testing purposes to avoid hitting rate limits from Let's Encrypt. In test mode, no actual certificates are installed. |
+| **HOST_PORT_HTTP**          | Yes       | `80`               | The host port to map the Nginx web server to for HTTP traffic. The default value for HTTP traffic is port 80, which needs to be available on your host.
+| **HOST_PORT_HTTPS**         | Yes       | `443`              | The host port to map the Nginx web server to for secure, HTTPS traffic. The default value for HTTPS traffic is port 443, which needs to be available on your host.
+| **NGINX_PORT_HTTP**         | Yes       | `8080`             | The internal port for HTTP traffic within the Nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
+| **NGINX_PORT_HTTPS**        | Yes       | `4430`             | The internal port for HTTPS traffic within the Nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
 
 ### Step 3 - Specify DNS Credentials
 Pending on your selected DNS provider, you will need to specify the API token and/or account credentials to connect with the DNS provider for the automated DNS-01 challenge. You can either specify the credentials as environment variables or as Docker secrets. Docker secrets are a bit more secure and are more suitable for a production environment. Please check the documentation of your DNS provider in the <a href="#prerequisites">Prerequisites</a> section. 
@@ -157,7 +157,7 @@ During boot, the custom Certbot container initializes the environment variables 
 * CERTBOT_DEPLOYMENT
 
 The following environment variable is optional:
-* CERTBOT_DNS_PROPAGATION_SECONDS
+* CERTBOT_DNS_PROPAGATION
 
 Also, at least one token variable for the DNS plugin needs to be provided as either environment variable or Docker secret. Secrets that start with a prefix of the specified DNS plugin are initialized automatically. For example, `dns_cloudflare_api_token` is initialized if the `CERTBOT_DNS_PLUGIN` is set to `cloudflare`.
 
@@ -186,7 +186,7 @@ certbot_1  | Plugins selected: Authenticator dns-cloudflare, Installer None
 certbot_1  | Obtaining a new certificate
 ```
 
-The Certbot container uses a DNS-01 challenge for Let's Encrypt to validate ownership of your domain. The DNS configuration is automated using the provided credentials. By default, `nginx-certbot` requests the main certificate and a wildcard certificate for your domain. Two TXT records are published to your DNS server, one for the main domain and one for the wildcard domain. Certbot waits for a specific interval to allow the DNS changes to propagate. The interval is tailored for each supported DNS plugin and can be overwritten with the `CERTBOT_DNS_PROPAGATION_SECONDS` environment variable. In this example, the delay is set to 30 seconds.
+The Certbot container uses a DNS-01 challenge for Let's Encrypt to validate ownership of your domain. The DNS configuration is automated using the provided credentials. By default, `nginx-certbot` requests the main certificate and a wildcard certificate for your domain. Two TXT records are published to your DNS server, one for the main domain and one for the wildcard domain. Certbot waits for a specific interval to allow the DNS changes to propagate. The interval is tailored for each supported DNS plugin and can be overwritten with the `CERTBOT_DNS_PROPAGATION` environment variable. In this example, the delay is set to 30 seconds.
 
 ```
 certbot_1  | Performing the following challenges:
@@ -209,23 +209,23 @@ certbot_1  |  - The dry run was successful.
 ```
 
 #### Initializing Nginx
-The custom Nginx container uses a default configuration with SSL settings recommended by the [Mozilla SSL Configuration Generator][mozilla-ssl]. Next to that, a default HTTP server is configured using a template (see `config/nginx/templates/default.conf.template`). During initialization, nginx uses this template and the environment variables to generate a default HTTP server. The generated file is put at the location `/etc/nginx/conf.d/default.conf`.
+The custom Nginx container uses a default configuration with SSL settings recommended by the [Mozilla SSL Configuration Generator][mozilla-ssl]. Next to that, a default HTTP server is configured using a template (see `config/nginx/templates/default.conf.template`). During initialization, Nginx uses this template and the environment variables to generate a default HTTP server. The generated file is put at the location `/etc/nginx/conf.d/default.conf`.
 
 ```
-nginx_1    | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
-nginx_1    | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
-nginx_1    | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+nginx_1    | docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+nginx_1    | docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+nginx_1    | docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
 nginx_1    | 10-listen-on-ipv6-by-default.sh: Getting the checksum of /etc/nginx/conf.d/default.conf
 nginx_1    | 10-listen-on-ipv6-by-default.sh: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
-nginx_1    | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx_1    | docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
 nginx_1    | 20-envsubst-on-templates.sh: Running envsubst on /etc/nginx/templates/default.conf.template to /etc/nginx/conf.d/default.conf
-nginx_1    | /docker-entrypoint.sh: Configuration complete; ready for start up
+nginx_1    | docker-entrypoint.sh: Configuration complete; ready for start up
 ```
 
 #### Installing Certificates
 During testing, no actual certificates are installed. Nginx waits for the files `fullchain.pem` and `privkey.pem` to become available in the certificates folder, e.g. `/etc/letsencrypt/live/example.com/`. The files are polled every 30 seconds until they are available.
 ```
-nginx_1    | /docker-entrypoint.sh: Waiting for certificates ('/etc/letsencrypt/live/example.com')
+nginx_1    | docker-entrypoint.sh: Waiting for certificates ('/etc/letsencrypt/live/example.com')
 ```
 
 Cancel execution of the containers with `ctrl-c` to proceed to the production configuration.
@@ -285,7 +285,7 @@ Run the following command to inspect the status of the Docker Stack.
 docker stack services nginx-certbot
 ```
 
-You should see the value `1/1` for `REPLICAS` for the certbot and nginx services if the stack was initialized correctly. It might take a while before the services are up and running, so simply repeat the command after a few minutes if needed.
+You should see the value `1/1` for `REPLICAS` for the Certbot and Nginx services if the stack was initialized correctly. It might take a while before the services are up and running, so simply repeat the command after a few minutes if needed.
 
 ```
 ID  NAME                   MODE        REPLICAS  IMAGE                                PORTS
@@ -371,6 +371,37 @@ Testing the secure web server requires you have either configured your DNS serve
 ### Renewing Certificates
 The custom Certbot service validates the installed certificates every 12 hours (see `config/certbot/docker_entrypoint.sh`). The certificate itself is renewed every 60 days. Nginx is reloaded every 6 hours to pick up any renewed certificates automatically (see `config/nginx/docker_entrypoint.sh`).
 
+### Using a Script to Debug and Build Images
+This repository uses the submodule [Docker Build Manager][dbm_repository] (dbm) to simplify the development and testing of the Nginx and Cerbot Docker images. Setup an alias to simplify the execution of dbm.
+```
+alias dbm="dbm/dbm.sh"
+```
+Add the same line to your shell settings (e.g. `~/.zshrc` on macOS or `~/.bashrc` on Ubuntu with bash login) to make the alias persistent. The following commands show a few use cases. Run them from within the root directory of your repository.
+
+**Build the development images of Nginx and Certbot from source**
+```console
+dbm dev build
+```
+
+**Start the development containers of Nginx and Certbot, displaying log messages on the console**
+```console
+dbm dev up
+```
+
+**Start the development container of Nginx and enter the container's shell**
+```console
+dbm dev up -t nginx
+```
+
+**Build the production images of Nginx and Certbot from source**
+```console
+dbm prod build
+```
+
+**Start the production containers of Nginx and Certbot in detached mode**
+```console
+dbm prod up -d
+```
 
 ## Contributing
 1. Clone the repository and create a new branch 
@@ -426,3 +457,4 @@ Copyright © [Mark Dumay][blog]
 -->
 [blog]: https://github.com/markdumay
 [repository]: https://github.com/markdumay/nginx-certbot.git
+[dbm_repository]: https://github.com/markdumay/dbm.git
