@@ -3,14 +3,14 @@
 # Title         : certbot_issue.sh
 # Description   : Runs certbot to issue or renew a wildcard certificate provided by Let's Encrypt
 # Author        : Mark Dumay
-# Date          : November 17th, 2020
+# Date          : February 3rd, 2021
 # Version       : 0.9
 # Usage         : certbot_issue.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
 # Comments      : Expects the following environment variables: CERTBOT_DNS_PLUGIN, CERTBOT_DOMAIN, CERTBOT_EMAIL, and
-#                 CERTBOT_DEPLOYMENT. The variable CERTBOT_DNS_PROPAGATION_SECONDS is optional and defaults to 30 
-#                 seconds. DNS credentials should be present as either Docker secret or environment variable. The
-#                 invoked cerbot script requires read/write access to the following folders:
+#                 CERTBOT_DEPLOYMENT. The variable CERTBOT_DNS_PROPAGATION is optional and defaults to 30 seconds. DNS
+#                 credentials should be present as either Docker secret or environment variable. The invoked certbot
+#                 script requires read/write access to the following folders:
 #                 - /var/lib/certbot
 #                 - /var/log/certbot
 #                 - /etc/certbot
@@ -242,7 +242,7 @@ is_valid_number() {
 #   - CERTBOT_EMAIL: Email address for important account notifications.
 #   - CERTBOT_DEPLOYMENT: Indicates to deploy for 'test' or 'production'.
 # The following variables are optional:
-#   - CERTBOT_DNS_PROPAGATION_SECONDS: The number of seconds to wait for DNS to propagate before asking the ACME server 
+#   - CERTBOT_DNS_PROPAGATION: The number of seconds to wait for DNS to propagate before asking the ACME server 
 #     to verify the DNS record. The default value varies per DNS plugin, but typically ranges between 10 and 1200
 #     seconds.
 #======================================================================================================================
@@ -251,7 +251,7 @@ is_valid_number() {
 #   - CERTBOT_DOMAIN
 #   - CERTBOT_EMAIL
 #   - CERTBOT_DEPLOYMENT
-#   - CERTBOT_DNS_PROPAGATION_SECONDS
+#   - CERTBOT_DNS_PROPAGATION
 #   - dns_prefix
 #   - dns_propagation
 # Outputs:
@@ -279,7 +279,7 @@ init_env() {
     [ $? = 1 ] && CERTBOT_DEPLOYMENT='test' && log "WARN: Deployment target not recognized, setting to 'test'"
 
     # validate optional parameters
-    is_valid_number "${CERTBOT_DNS_PROPAGATION_SECONDS}"
+    is_valid_number "${CERTBOT_DNS_PROPAGATION}"
     [ $? = 1 ] && dns_propagation='false' && log "INFO: Setting DNS propagation to default"
 
     # define prefix for DNS plugin credentials
@@ -333,7 +333,7 @@ generate_certbot_config() {
 #   - CERTBOT_DOMAIN
 #   - CERTBOT_EMAIL
 #   - CERTBOT_DEPLOYMENT
-#   - CERTBOT_DNS_PROPAGATION_SECONDS
+#   - CERTBOT_DNS_PROPAGATION
 #   - dns_prefix
 #   - dns_propagation
 # Outputs:
@@ -363,7 +363,7 @@ run_certbot() {
     set -- "$@" "--dns-${CERTBOT_DNS_PLUGIN}"
     set -- "$@" "--dns-${CERTBOT_DNS_PLUGIN}-credentials" "${SECRET_PATH}/${CERTBOT_DNS_PLUGIN}.ini"
     if [ "${dns_propagation}" = 'true' ] ; then
-        set -- "$@" "--dns-${CERTBOT_DNS_PLUGIN}-propagation-seconds" "${CERTBOT_DNS_PROPAGATION_SECONDS}"
+        set -- "$@" "--dns-${CERTBOT_DNS_PLUGIN}-propagation-seconds" "${CERTBOT_DNS_PROPAGATION}"
     fi
     set -- "$@" -d "${CERTBOT_DOMAIN}"
     set -- "$@" -d "*.${CERTBOT_DOMAIN}"
