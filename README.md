@@ -80,7 +80,7 @@ The `docker-compose.yml` file uses environment variables to simplify the configu
 mv sample.env .env
 ```
 
-The `.env` file specifies eight variables. Adjust them as needed:
+The `.env` file specifies ten variables. Adjust them as needed:
 
 
 | Variable                    | Mandatory | Example            | Description |
@@ -94,6 +94,8 @@ The `.env` file specifies eight variables. Adjust them as needed:
 | **HOST_PORT_HTTPS**         | Yes       | `443`              | The host port to map the Nginx web server to for secure, HTTPS traffic. The default value for HTTPS traffic is port 443, which needs to be available on your host.
 | **NGINX_PORT_HTTP**         | Yes       | `8080`             | The internal port for HTTP traffic within the Nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
 | **NGINX_PORT_HTTPS**        | Yes       | `4430`             | The internal port for HTTPS traffic within the Nginx container. The value needs to be greater than 1023, as the container runs in unprivileged (non-root) mode.
+| **UID**                     | Yes       | `1001`             | The ID of the unprivileged user running the containers.
+| **GID**                     | Yes       | `1001`             | The group ID of the unprivileged user running the containers.
 
 ### Step 3 - Specify DNS Credentials
 Pending on your selected DNS provider, you will need to specify the API token and/or account credentials to connect with the DNS provider for the automated DNS-01 challenge. You can either specify the credentials as environment variables or as Docker secrets. Docker secrets are a bit more secure and are more suitable for a production environment. Please check the documentation of your DNS provider in the <a href="#prerequisites">Prerequisites</a> section. 
