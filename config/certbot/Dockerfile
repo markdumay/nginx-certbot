@@ -52,6 +52,8 @@ RUN apk update -f && \
         -d /var/log/certbot \
         -d "/home/${BUILD_USER}" \
         -d /tmp \
+        -f /usr/local/sbin/certbot_issue.sh \
+        -f /usr/local/sbin/docker_entrypoint.sh \
         -k chmod \
         "${BUILD_FLAG}" && \
     rm -f /usr/local/sbin/harden_alpine.sh

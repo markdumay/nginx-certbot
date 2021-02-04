@@ -21,7 +21,7 @@ ENV BUILD_VERSION "${BUILD_VERSION}"
 
 # Copy default nginx configuration and web page
 COPY ./dbm/utils/harden_alpine.sh /usr/local/sbin/harden_alpine.sh
-COPY ./config/nginx/docker-entrypoint.sh /usr/local/sbin/docker-entrypoint.sh
+COPY ./config/nginx/docker_entrypoint.sh /usr/local/sbin/docker_entrypoint.sh
 COPY ./config/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./config/nginx/ffdhe2048.txt /etc/nginx/snippets/ffdhe2048.txt
 COPY ./config/nginx/templates /etc/nginx/templates
@@ -39,7 +39,7 @@ RUN apk update -f && \
     touch /var/run/nginx.pid && \ 
     mkdir -p /etc/letsencrypt && \
     mkdir -p /var/www/html && \
-    chmod +x /usr/local/sbin/docker-entrypoint.sh && \
+    chmod +x /usr/local/sbin/docker_entrypoint.sh && \
     chmod +x /usr/local/sbin/harden_alpine.sh && \
     /usr/local/sbin/harden_alpine.sh harden \
         -U nginx \
@@ -53,14 +53,16 @@ RUN apk update -f && \
         -d /var/log/nginx \
         -d /var/www/html \
         -d /tmp \
+        -f /etc/nginx/nginx.conf \
         -f /var/run/nginx.pid \
+        -f /usr/local/sbin/docker_entrypoint.sh \
         -k nginx \
         -k nginx-debug \
         "${BUILD_FLAG}" && \
     rm -f /usr/local/sbin/harden_alpine.sh
 
 # Define mountable directories (shared with certbot and other containers)
-VOLUME ["/etc/letsencrypt", "/etc/nginx/templates"]
+VOLUME [ "/etc/letsencrypt", "/etc/nginx/templates" ]
 
 # Run the container as non-root user
 USER "${BUILD_USER}"
@@ -70,7 +72,7 @@ USER "${BUILD_USER}"
 #  - wait for cerficates
 #  - run nginx daemon in foreground
 #  - monitor for template changes, and reload if needed
-ENTRYPOINT ["/usr/local/sbin/docker-entrypoint.sh", "nginx"]
+ENTRYPOINT [ "docker_entrypoint.sh", "nginx" ]
 
 # Expose https and http ports (ports below 1024 are restricted to root only)
 EXPOSE 4430 8080
