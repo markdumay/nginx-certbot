@@ -49,12 +49,15 @@ RUN apk update -f && \
         -d /etc/letsencrypt \
         -d /etc/nginx/conf.d \
         -d /etc/nginx/snippets \
+        -d /etc/nginx/templates \
         -d /var/cache/nginx \
         -d /var/log/nginx \
         -d /var/www/html \
         -d /tmp \
         -f /etc/nginx/nginx.conf \
         -f /var/run/nginx.pid \
+        -f /etc/nginx/snippets/ffdhe2048.txt \
+        -f /var/www/html/index.html \
         -f /usr/local/sbin/docker_entrypoint.sh \
         -k nginx \
         -k nginx-debug \
