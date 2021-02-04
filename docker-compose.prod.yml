@@ -1,8 +1,6 @@
 # Copyright © 2021 Mark Dumay. All rights reserved.
 # Use of this source code is governed by The MIT License (MIT) that can be found in the LICENSE file.
 
-version: "3.7"
-
 services:
   certbot:
     build:
@@ -12,6 +10,8 @@ services:
           BUILD_VERSION: "${BUILD_VERSION}"
           UID: "${UID}"
           GID: "${GID}"
+          CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+          BUILD_FLAG: --add-shell
 
   nginx:
     build:
@@ -21,3 +21,4 @@ services:
           BUILD_VERSION: "${BUILD_VERSION}"
           UID: "${UID}"
           GID: "${GID}"
+          BUILD_FLAG: --add-shell

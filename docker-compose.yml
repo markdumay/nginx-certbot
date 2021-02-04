@@ -5,8 +5,7 @@ version: "3.7"
 
 secrets:
   dns_cloudflare_api_token:
-    file: secrets/dns_cloudflare_api_token
-    external: false
+    external: true
 
 networks:
   certbot:
@@ -31,7 +30,11 @@ services:
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
       - CERTBOT_DEPLOYMENT=${CERTBOT_DEPLOYMENT}
     secrets:
-      - dns_cloudflare_api_token
+      - source: dns_cloudflare_api_token
+        target: dns_cloudflare_api_token
+        uid: "${UID}"
+        gid: "${GID}"
+        mode: 0440 # TODO: check correct secret mode
 
   nginx:
     image: "markdumay/nginx-unprivileged:${BUILD_VERSION:?version}${IMAGE_SUFFIX:-}"

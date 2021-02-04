@@ -10,7 +10,6 @@ services:
   certbot:
     build:
       args:
-        CERTBOT_DNS_PLUGIN: ${CERTBOT_DNS_PLUGIN}
         BUILD_FLAG: --add-shell
 
   nginx:
