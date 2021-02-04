@@ -3,7 +3,7 @@
 # Title         : certbot_issue.sh
 # Description   : Runs certbot to issue or renew a wildcard certificate provided by Let's Encrypt
 # Author        : Mark Dumay
-# Date          : February 3rd, 2021
+# Date          : February 4th, 2021
 # Version       : 0.9
 # Usage         : certbot_issue.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
@@ -337,7 +337,7 @@ generate_certbot_config() {
 #   - dns_prefix
 #   - dns_propagation
 # Outputs:
-#   Symlinks to renewed or existing certificates in the folder '/etc/letsencrypt/live'. Files include:
+#   Symlinks to renewed or existing certificates in the folder '/etc/certbot/live'. Files include:
 #     - privkey.pem:   Private key for the certificate.
 #     - fullchain.pem: All certificates, including server certificate (aka leaf certificate or end-entity certificate). 
 #                      The server certificate is the first one in this file, followed by any intermediates. This is 
