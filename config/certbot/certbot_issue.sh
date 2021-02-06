@@ -31,6 +31,8 @@ readonly DEPLOYMENT_TARGET="test production"
 readonly WORK_DIR='/var/lib/certbot'
 readonly LOGS_DIR='/var/log/certbot'
 readonly CONFIG_DIR='/etc/certbot'
+readonly MAX_AGE=43200 # 12 hours
+readonly STATUS_FILE="${WORK_DIR}/.status"
 
 
 #======================================================================================================================
@@ -63,6 +65,7 @@ usage() {
     echo 'Commands:'
     echo '  init                   Initialize the environment and configuration'
     echo '  run                    Issue the certificate'
+    echo '  verify                 Verify the status of the last run'
     echo
 }
 
@@ -127,9 +130,10 @@ parse_args() {
     # Process and validate command-line arguments
     while [ -n "$1" ]; do
         case "$1" in
-            init ) command="$1";;
-            run  ) command="$1";;
-            *    ) usage; terminate "Unrecognized command ($1)"
+            init   ) command="$1";;
+            run    ) command="$1";;
+            verify ) command="$1";;
+            *      ) usage; terminate "Unrecognized command ($1)"
         esac
         shift
     done
@@ -375,7 +379,34 @@ run_certbot() {
         set -- "$@" --test-cert
     fi
 
-    "$@" || terminate "Certbot failed, please check correct installation and verify parameters"
+    if "$@"; then
+        echo "SUCCESS" > "${STATUS_FILE}"
+    else
+        echo "ERROR" > "${STATUS_FILE}"
+        terminate "Certbot failed, please check correct installation and verify parameters"
+    fi
+}
+
+#======================================================================================================================
+# Verifies the status of the certbot configuration and returns an exit code.
+#======================================================================================================================
+# Outputs:
+#   Returns one of the following exit codes:
+#   - 0: last run was successful and less than 12 hours ago
+#   - 1: last run was successful but more than 12 hours ago
+#   - 2: last run was unsuccessful
+#   - 3: unknown
+#======================================================================================================================
+verify_status() {
+    status=$(cat "${STATUS_FILE}" 2> /dev/null)
+    t1=$(stat -c %Y "${STATUS_FILE}" 2> /dev/null || echo 0)
+    t2=$(date +%s)
+    delta=$((t2 - t1))
+
+    [ "${status}" = 'SUCCESS' ] && [ "${delta}" -le "${MAX_AGE}" ] && exit 0
+    [ "${status}" = 'SUCCESS' ] && [ "${delta}" -gt "${MAX_AGE}" ] && exit 1
+    [ "${status}" = 'ERROR' ] && exit 2
+    exit 3
 }
 
 #======================================================================================================================
@@ -388,14 +419,18 @@ main() {
 
     # Execute workflows
     case "${command}" in
-        init )
+        init   )
             total_steps=2
             init_env
             generate_certbot_config
             ;;
-        run  )
+        run    )
             total_steps=1
             run_certbot
+            ;;
+        verify )
+            total_steps=1
+            verify_status
             ;;
         *)       
             terminate 'Invalid command'
