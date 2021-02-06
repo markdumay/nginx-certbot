@@ -9,7 +9,11 @@ secrets:
 
 networks:
   certbot:
+    driver_opts:
+      encrypted: ""
   portal:
+    driver_opts:
+      encrypted: ""
 
 volumes:
   certs:
