@@ -47,6 +47,7 @@ RUN apk update -f && \
         -u "${UID}" \
         -g "${GID}" \
         --create-home \
+        --tmpfs \
         -d /etc/certbot \
         -d /var/lib/certbot \
         -d /var/log/certbot \

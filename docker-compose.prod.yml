@@ -42,7 +42,7 @@ services:
         BUILD_VERSION: "${BUILD_VERSION}"
         UID: "${UID}"
         GID: "${GID}"
-        BUILD_FLAG: --add-shell
+        BUILD_FLAG: --add-shell #TODO: add --tmpfs?
     read_only: true
     volumes:
       - type: tmpfs
