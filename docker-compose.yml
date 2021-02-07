@@ -39,11 +39,6 @@ services:
         uid: "${UID}"
         gid: "${GID}"
         mode: 0440 # TODO: check correct secret mode
-    healthcheck:
-      test: ["CMD", "certbot_issue.sh", "verify"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
 
   nginx:
     image: "markdumay/nginx-unprivileged:${BUILD_VERSION:?version}${IMAGE_SUFFIX:-}"
@@ -61,8 +56,3 @@ services:
       - NGINX_PORT_HTTP=${NGINX_PORT_HTTP}
       - NGINX_PORT_HTTPS=${NGINX_PORT_HTTPS}
       - NGINX_POLLING_INTERVAL=${NGINX_POLLING_INTERVAL}
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:${NGINX_PORT_HTTP}"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3

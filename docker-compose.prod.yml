@@ -7,18 +7,64 @@ services:
       dockerfile: ./config/certbot/Dockerfile
       context: .
       args:
-          BUILD_VERSION: "${BUILD_VERSION}"
-          UID: "${UID}"
-          GID: "${GID}"
-          CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
-          BUILD_FLAG: --add-shell
+        BUILD_VERSION: "${BUILD_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
+        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+        BUILD_FLAG: --add-shell
+    read_only: true
+    volumes:
+      - type: tmpfs
+        target: /home/certbot
+      - type: tmpfs
+        target: /tmp
+      - type: tmpfs
+        target: /var/lib/certbot
+      - type: tmpfs
+        target: /var/log/certbot
+    healthcheck:
+      test: ["CMD", "certbot_issue.sh", "verify"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+        window: 120s
 
   nginx:
     build:
       dockerfile: ./config/nginx/Dockerfile
       context: .
       args:
-          BUILD_VERSION: "${BUILD_VERSION}"
-          UID: "${UID}"
-          GID: "${GID}"
-          BUILD_FLAG: --add-shell
+        BUILD_VERSION: "${BUILD_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
+        BUILD_FLAG: --add-shell
+    read_only: true
+    volumes:
+      - type: tmpfs
+        target: /etc/nginx/conf.d
+      - type: tmpfs
+        target: /etc/nginx/snippets
+      - type: tmpfs
+        target: /tmp
+      - type: tmpfs
+        target: /var/cache/nginx
+      - type: tmpfs
+        target: /var/log/nginx
+      - type: tmpfs
+        target: /var/www/html
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:${NGINX_PORT_HTTP}"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+        window: 120s
