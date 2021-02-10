@@ -9,6 +9,7 @@ ARG GID=1001
 ARG BUILD_USER='www'
 ARG BUILD_FLAGS=''
 ARG BUILD_VERSION
+ARG BUILD_TARGET='test'
 
 
 #======================================================================================================================
@@ -32,6 +33,7 @@ ARG UID
 ARG GID
 ARG BUILD_USER
 ARG BUILD_FLAGS
+ARG BUILD_TARGET
 RUN apk update -f && \
     apk --no-cache add -f shadow && \
     rm -rf /var/cache/apk/* /var/cache/nginx /tmp && \
@@ -62,6 +64,11 @@ USER "${BUILD_USER}"
 
 # Define mountable directories (shared with certbot and other containers)
 VOLUME [ "/etc/letsencrypt", "/etc/nginx/templates" ]
+
+# Define the healthcheck (production only)
+ARG BUILD_TARGET
+HEALTHCHECK --interval=1m30s --timeout=10s --retries=3 --start-period=1m \
+    CMD if [[ "${BUILD_TARGET}" == 'production' ]]; then curl --fail "localhost:${NGINX_PORT_HTTP}"; else exit 0; fi
 
 # Start custom script:
 #  - configure nginx using templates

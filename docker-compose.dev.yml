@@ -11,8 +11,10 @@ services:
     build:
       args:
         BUILD_FLAGS: --add-shell
+        BUILD_TARGET: test
 
   nginx:
     build:
       args:
         BUILD_FLAGS: --add-shell -k nginx-debug
+        BUILD_TARGET: test

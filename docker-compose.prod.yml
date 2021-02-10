@@ -12,6 +12,7 @@ services:
         GID: "${GID}"
         CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
         BUILD_FLAGS: --add-shell --read-only
+        BUILD_TARGET: production
     read_only: true
     volumes:
       - type: tmpfs
@@ -22,12 +23,6 @@ services:
         target: /var/lib/certbot
       - type: tmpfs
         target: /var/log/certbot
-    healthcheck:
-      test: ["CMD", "certbot_issue.sh", "verify"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 1m # note: ensure this is longer than CERTBOT_DNS_PROPAGATION
     deploy:
       restart_policy:
         condition: on-failure
@@ -44,6 +39,7 @@ services:
         UID: "${UID}"
         GID: "${GID}"
         BUILD_FLAGS: --add-shell --read-only
+        BUILD_TARGET: production
     read_only: true
     volumes:
       - type: tmpfs
@@ -52,12 +48,6 @@ services:
         target: /var/lib/nginx/conf.d
       - type: tmpfs
         target: /var/cache/nginx
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "localhost:${NGINX_PORT_HTTP}"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 1m # note: ensure this is longer than CERTBOT_DNS_PROPAGATION
     deploy:
       restart_policy:
         condition: on-failure

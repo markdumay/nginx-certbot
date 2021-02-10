@@ -10,6 +10,7 @@ ARG GID=1001
 ARG BUILD_USER='certbot'
 ARG BUILD_FLAGS=''
 ARG BUILD_VERSION
+ARG BUILD_TARGET='test'
 
 
 #======================================================================================================================
@@ -61,6 +62,11 @@ USER "${BUILD_USER}"
 
 # Expose the certificates folder as volume
 VOLUME [ "/etc/certbot" ]
+
+# Define the healthcheck (production only)
+ARG BUILD_TARGET
+HEALTHCHECK --interval=1m30s --timeout=10s --retries=3 --start-period=1m \
+    CMD if [[ "${BUILD_TARGET}" == 'production' ]]; then certbot_issue.sh verify; else exit 0; fi
 
 # Run certbot script (repeats every 12 hours)
 ENTRYPOINT [ "docker_entrypoint.sh" ]
