@@ -24,7 +24,7 @@ services:
         target: /var/log/certbot
     healthcheck:
       test: ["CMD", "certbot_issue.sh", "verify"]
-      interval: 5m
+      interval: 1m30s
       timeout: 10s
       retries: 3
       start_period: 1m # note: ensure this is longer than CERTBOT_DNS_PROPAGATION
