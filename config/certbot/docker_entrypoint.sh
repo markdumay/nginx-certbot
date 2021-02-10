@@ -53,7 +53,6 @@ terminate() {
     exit 1
 }
 
-
 #=======================================================================================================================
 # Validates if the current shell user has R/W access to selected directories. The script terminates if a directory is
 # not found, or if the permissions are incorrect.
@@ -63,7 +62,7 @@ terminate() {
 #=======================================================================================================================
 validate_access() {
     log 'Validating access to key directories'
-    
+
     # skip when R/W dirs are not specified
     if [ -n "${RW_DIRS}" ]; then
         # print directories that do not have R/W access
