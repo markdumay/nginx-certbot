@@ -1,14 +1,14 @@
 #!/bin/sh
 #=======================================================================================================================
 # Title         : docker-entrypoint.sh
-# Description   : Launches Nginx using server configuration templates. The execution starts once certificates are 
+# Description   : Launches Nginx using server configuration templates. The execution starts once certificates are
 #                 available. Nginx is reloaded automatically on updated templates or certificates.
 # Author        : Mark Dumay
-# Date          : February 2nd, 2021
+# Date          : February 10th, 2021
 # Version       : 0.9
 # Usage         : docker-entrypoint.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
-# Comments      : 
+# Comments      :
 #=======================================================================================================================
 
 #=======================================================================================================================
@@ -17,10 +17,11 @@
 readonly BOOT_TIME=5 # time in seconds to wait for the nginx master and worker processes to have started
 readonly CERT_PATH="/etc/certbot/live/${CERTBOT_DOMAIN}"
 readonly ENTRYPOINT_PATH='/docker-entrypoint.d'
-readonly NGINX_CONF_DIR='/etc/nginx/conf.d'
+readonly NGINX_CONF_DIR='/var/lib/nginx/conf.d'
 readonly NGINX_SNIPPETS_DIR='/etc/nginx/snippets'
 readonly NGINX_TEMPLATES_DIR='/etc/nginx/templates'
 readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
+readonly RW_DIRS='/etc/letsencrypt /etc/nginx/templates /tmp /var/lib/nginx/conf.d /var/cache/nginx'
 
 
 #=======================================================================================================================
@@ -28,7 +29,12 @@ readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
 #=======================================================================================================================
 polling_interval="${NGINX_POLLING_INTERVAL:-60}" # seconds
 filename=$(basename "$0")
+nginx_pid=0
 
+
+#=======================================================================================================================
+# Helper Functions
+#=======================================================================================================================
 
 #=======================================================================================================================
 # Displays a log message on console.
@@ -43,7 +49,7 @@ log() {
 }
 
 #=======================================================================================================================
-# Displays error message on console and terminates with non-zero error.
+# Displays error message on console and terminates with non-zero exit code.
 #=======================================================================================================================
 # Arguments:
 #   $1 - Error message to display.
@@ -56,14 +62,16 @@ terminate() {
 }
 
 #=======================================================================================================================
-# Launches any initial entrypoints scripts available in '/docker-entrypoint.d/' (source code is copied from the Nginx 
+# Launches any initial entrypoints scripts available in '/docker-entrypoint.d/' (source code is copied from the Nginx
 # Docker repository). One of the default scripts ('20-envsubst-on-templates.sh') generates server configurations based
 # on templates available in the '/etc/nginx/templates' folder. Any other defined entrypoints scripts are executed too.
 #=======================================================================================================================
 # Outputs:
-#   Generated server configurations in '/etc/nginx/conf.d', plus output from additionally defined entrypoint scripts.
+#   Generated server configurations in "${NGINX_CONF_DIR}", plus output from additionally defined entrypoint scripts.
 #=======================================================================================================================
 launch_entrypoint_scripts() {
+    export NGINX_ENVSUBST_TEMPLATE_DIR="${NGINX_TEMPLATES_DIR}"
+    export NGINX_ENVSUBST_OUTPUT_DIR="${NGINX_CONF_DIR}"
     if find "${ENTRYPOINT_PATH}/" -mindepth 1 -maxdepth 1 -type f -print -quit 2>/dev/null | read -r; then
         log "${ENTRYPOINT_PATH}/ is not empty, will attempt to perform configuration"
 
@@ -79,7 +87,7 @@ launch_entrypoint_scripts() {
                         log "Ignoring ${f}, not executable"
                     fi
                     ;;
-                *) 
+                *)
                     log "Ignoring ${f}"
                     ;;
             esac
@@ -92,10 +100,10 @@ launch_entrypoint_scripts() {
 }
 
 #=======================================================================================================================
-# Watches the folders '/etc/nginx/templates', '/etc/nginx/templates/snippets', and 
+# Watches the folders '/etc/nginx/templates', '/etc/nginx/templates/snippets', and
 # '/etc/certbot/live/${CERTBOT_DOMAIN}' for any changes. Observed files should have a '.template' or '.conf' suffix.
-# In case a template has been changed, has been added, or has been removed, existing server configurations are removed 
-# entirely and recreated. Nginx is reloaded once the templates have been processed, or when a modified certificate is 
+# In case a template has been changed, has been added, or has been removed, existing server configurations are removed
+# entirely and recreated. Nginx is reloaded once the templates have been processed, or when a modified certificate is
 # detected. The polling interval is set to one minute by default.
 #=======================================================================================================================
 # Globals:
@@ -109,7 +117,7 @@ reload_nginx_on_change() {
         -exec md5sum {} \; -maxdepth 2 2>/dev/null | sort) # covers templates and snippets
     prev_cert_checksum=$(find -L "${CERT_PATH}"/*.pem -type f -exec md5sum {} \; -maxdepth 1 2>/dev/null | sort)
     while true
-    do 
+    do
         sleep "${polling_interval}"
 
         # scan for any new templates or certificates
@@ -131,7 +139,7 @@ reload_nginx_on_change() {
         if  [ "${current_config}" != "${template_config}" ] || \
             [ "${current_snippets}" != "${snippet_config}" ] || \
             [ "${new_incoming_checksum}" != "${prev_incoming_checksum}" ]; then
-            
+
             log "Changes detected, reconfiguring sites"
             # remove existing configurations
             rm -rf "${NGINX_CONF_DIR}"/*.conf "${NGINX_SNIPPETS_DIR}"/*.conf || true
@@ -151,16 +159,18 @@ reload_nginx_on_change() {
 }
 
 #=======================================================================================================================
-# Verifies nginx has started successfully. It validates the presence of at least one nginx worker process after a grace 
+# Verifies nginx has started successfully. It validates the presence of at least one nginx worker process after a grace
 # period for the boot process.
 #=======================================================================================================================
+# Globals:
+#  - nginx_pid
 # Outputs:
 #   Prints nginx status to stdout, terminates with non-zero exit code on eror.
 #=======================================================================================================================
 start_and_verify_nginx() {
     # confirm command can be found
     if ! command -v "$1" > /dev/null; then terminate "Command '$1' not found"; fi
-    
+
     # start nginx and capture PID of the master process
     log "Starting nginx..."
     "$1" -g 'daemon off;' &
@@ -175,8 +185,34 @@ start_and_verify_nginx() {
 }
 
 #=======================================================================================================================
-# Waits for certificates in the folder '/etc/certbot/live/${CERTBOT_DOMAIN}' to become available. This prevents 
-# starting Nginx prematurely. The polling interval is set to one minute by default.
+# Validates if the current shell user has R/W access to selected directories. The script terminates if a directory is
+# not found, or if the permissions are incorrect.
+#=======================================================================================================================
+# Outputs:
+#   Non-zero exit code in case of errors.
+#=======================================================================================================================
+validate_access() {
+    log 'Validating access to key directories'
+    
+    # skip when R/W dirs are not specified
+    if [ -n "${RW_DIRS}" ]; then
+        # print directories that do not have R/W access
+        dirs=$(eval "find ${RW_DIRS} -xdev -type d \
+            -exec sh -c '(test -r \"\$1\" && test -w \"\$1\") || echo \"\$1\"' _ {} \; 2> /dev/null")
+        result="$?"
+
+        # capture result:
+        # - non-zero result implies a directory cannot be found
+        # - non-zero dirs captures directories that do not have R/W access
+        [ "${result}" -ne 0 ] && terminate "Missing one or more directories: ${RW_DIRS}"
+        [ -n "${dirs}" ] && terminate "Incorrect permissions: ${dirs}"
+        log 'Permissions are correct'
+    fi
+}
+
+#=======================================================================================================================
+# Waits for certificates in the folder '/etc/certbot/live/${CERTBOT_DOMAIN}' to become available. This prevents starting
+# Nginx prematurely. The polling interval is set to one minute by default.
 #=======================================================================================================================
 # Globals:
 #  - polling_interval
@@ -191,6 +227,11 @@ wait_for_certificates() {
     done
 }
 
+
+#=======================================================================================================================
+# Main Script
+#=======================================================================================================================
+
 #=======================================================================================================================
 # Entrypoint for the script.
 #=======================================================================================================================
@@ -204,8 +245,11 @@ main() {
     fi
 
     if [ "$1" = "nginx" ] || [ "$1" = "nginx-debug" ]; then
+        # validate r/w access to key directories
+        validate_access
+
         # setup initial nginx configuration, including certificates
-        rm -f "${NGINX_CONF_DIR}"/*.conf || true # remove any existing configurations at launch
+        rm -f "${NGINX_CONF_DIR}"/*.conf 2> dev/null # remove any existing configurations at launch
         launch_entrypoint_scripts "$@"
         wait_for_certificates "$@"
 
@@ -215,9 +259,10 @@ main() {
             log "nginx started successfully"
             wait "${nginx_pid}" & reload_nginx_on_change "$@"
         else
-            log "Unknown error"
-            exit 1
+            terminate 'Unknown error'
         fi
+    elif [ -z "$1" ]; then
+        terminate 'Please specify a command'
     else
         terminate "Invalid command '$1'"
     fi

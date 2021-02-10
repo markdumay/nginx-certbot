@@ -10,9 +10,9 @@ services:
   certbot:
     build:
       args:
-        BUILD_FLAG: --add-shell
+        BUILD_FLAGS: --add-shell
 
   nginx:
     build:
       args:
-        BUILD_FLAG: --add-shell
+        BUILD_FLAGS: --add-shell -k nginx-debug

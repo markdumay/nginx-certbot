@@ -8,7 +8,7 @@ ARG CERTBOT_DNS_PLUGIN
 ARG UID=1001
 ARG GID=1001
 ARG BUILD_USER='certbot'
-ARG BUILD_FLAG=''
+ARG BUILD_FLAGS=''
 ARG BUILD_VERSION
 
 
@@ -26,19 +26,17 @@ COPY ./dbm/utils/harden_alpine.sh /usr/local/sbin/harden_alpine.sh
 COPY ./config/certbot/certbot_issue.sh /usr/local/sbin/certbot_issue.sh
 COPY ./config/certbot/docker_entrypoint.sh /usr/local/sbin/docker_entrypoint.sh
 
-# Update grep package and assign access rights for key files and folders
-# Note: shadow package is needed to support higher UIDs/GIDsARG UID
+# Harden the image and assign access rights for key files and folders
+# Note: chmod is needed by certbot_issue.sh
 ARG UID
 ARG GID
 ARG BUILD_USER
-ARG BUILD_FLAG
+ARG BUILD_FLAGS
 ARG CERTBOT_DNS_PLUGIN
+
 RUN apk update -f && \
-    apk --no-cache add -f busybox-suid coreutils grep shadow && \
-    rm -rf /var/cache/apk/* && \
-    mkdir -p /etc/certbot && \
-    mkdir -p /var/lib/certbot && \
-    mkdir -p /var/log/certbot && \
+    apk --no-cache add -f grep shadow && \
+    rm -rf /var/cache/apk/* /tmp && \
     chmod +x /usr/local/sbin/certbot_issue.sh && \
     chmod +x /usr/local/sbin/docker_entrypoint.sh && \
     chmod +x /usr/local/sbin/harden_alpine.sh && \
@@ -46,17 +44,15 @@ RUN apk update -f && \
         -n "${BUILD_USER}" \
         -u "${UID}" \
         -g "${GID}" \
-        --create-home \
-        --tmpfs \
-        -d /etc/certbot \
-        -d /var/lib/certbot \
-        -d /var/log/certbot \
+        -v /etc/certbot \
         -d "/home/${BUILD_USER}" \
         -d /tmp \
+        -d /var/lib/certbot \
+        -d /var/log/certbot \
         -f /usr/local/sbin/certbot_issue.sh \
         -f /usr/local/sbin/docker_entrypoint.sh \
         -k chmod \
-        "${BUILD_FLAG}" && \
+        "${BUILD_FLAGS}" && \
     rm -f /usr/local/sbin/harden_alpine.sh
 
 # Run the container as non-root user
