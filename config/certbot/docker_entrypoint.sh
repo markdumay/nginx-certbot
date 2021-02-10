@@ -41,6 +41,7 @@ terminate() {
     exit 1
 }
 
+
 #=======================================================================================================================
 # Validates if the current shell user has R/W access to selected directories. The script terminates if a directory is
 # not found, or if the permissions are incorrect.
@@ -49,16 +50,22 @@ terminate() {
 #   Non-zero exit code in case of errors.
 #=======================================================================================================================
 validate_access() {
-    # print directories that do not have R/W access
-    dirs=$(eval "find ${RW_DIRS} -xdev -type d \
-           -exec sh -c '(test -r \"\$1\" && test -w \"\$1\") || echo \"\$1\"' _ {} \; 2> /dev/null")
-    result="$?"
+    log 'Validating access to key directories'
+    
+    # skip when R/W dirs are not specified
+    if [ -n "${RW_DIRS}" ]; then
+        # print directories that do not have R/W access
+        dirs=$(eval "find ${RW_DIRS} -xdev -type d \
+            -exec sh -c '(test -r \"\$1\" && test -w \"\$1\") || echo \"\$1\"' _ {} \; 2> /dev/null")
+        result="$?"
 
-    # capture result:
-    # - non-zero result implies a directory cannot be found
-    # - non-zero dirs captures directories that do not have R/W access
-    [ "${result}" -ne 0 ] && terminate "Missing one or more directories: ${RW_DIRS}"
-    [ -n "${dirs}" ] && terminate "Incorrect permissions: ${dirs}"
+        # capture result:
+        # - non-zero result implies a directory cannot be found
+        # - non-zero dirs captures directories that do not have R/W access
+        [ "${result}" -ne 0 ] && terminate "Missing one or more directories: ${RW_DIRS}"
+        [ -n "${dirs}" ] && terminate "Incorrect permissions: ${dirs}"
+        log 'Permissions are correct'
+    fi
 }
 
 
