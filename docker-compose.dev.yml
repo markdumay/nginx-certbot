@@ -9,12 +9,23 @@ secrets:
 services:
   certbot:
     build:
+      dockerfile: ./config/certbot/Dockerfile
+      context: .
       args:
+        BUILD_VERSION: "${BUILD_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
+        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
         BUILD_FLAGS: --add-shell
         BUILD_TARGET: test
 
   nginx:
     build:
+      dockerfile: ./config/nginx/Dockerfile
+      context: .
       args:
+        BUILD_VERSION: "${BUILD_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
         BUILD_FLAGS: --add-shell -k nginx-debug
         BUILD_TARGET: test
