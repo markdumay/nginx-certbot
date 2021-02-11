@@ -4,7 +4,7 @@
 # Description   : Launches Nginx using server configuration templates. The execution starts once certificates are
 #                 available. Nginx is reloaded automatically on updated templates or certificates.
 # Author        : Mark Dumay
-# Date          : February 10th, 2021
+# Date          : February 11th, 2021
 # Version       : 0.9
 # Usage         : docker-entrypoint.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
@@ -18,7 +18,6 @@ readonly BOOT_TIME=5 # time in seconds to wait for the nginx master and worker p
 readonly CERT_PATH="/etc/certbot/live/${CERTBOT_DOMAIN}"
 readonly ENTRYPOINT_PATH='/docker-entrypoint.d'
 readonly NGINX_CONF_DIR='/var/lib/nginx/conf.d'
-readonly NGINX_SNIPPETS_DIR='/etc/nginx/snippets'
 readonly NGINX_TEMPLATES_DIR='/etc/nginx/templates'
 readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
 readonly RW_DIRS='/etc/letsencrypt /etc/nginx/templates /tmp /var/lib/nginx/conf.d /var/cache/nginx'
@@ -100,17 +99,17 @@ launch_entrypoint_scripts() {
 }
 
 #=======================================================================================================================
-# Watches the folders '/etc/nginx/templates', '/etc/nginx/templates/snippets', and
-# '/etc/certbot/live/${CERTBOT_DOMAIN}' for any changes. Observed files should have a '.template' or '.conf' suffix.
-# In case a template has been changed, has been added, or has been removed, existing server configurations are removed
-# entirely and recreated. Nginx is reloaded once the templates have been processed, or when a modified certificate is
-# detected. The polling interval is set to one minute by default.
+# Watches the folders '/etc/nginx/templates' (including snippets) and '/etc/certbot/live/${CERTBOT_DOMAIN}' for any 
+# changes. Observed files should have a '.template' or '.conf' suffix. In case a template has been changed, has been
+# added, or has been removed, existing server configurations are removed entirely and recreated. Nginx is reloaded once 
+# the templates have been processed, or when a modified certificate is detected. The polling interval is set to one 
+# minute by default.
 #=======================================================================================================================
 # Globals:
 #  - boot_failure
 #  - polling_interval
 # Outputs:
-#   Updated server configurations in '/etc/nginx/conf.d' and snippets in '/etc/nginx/snippets'; reloaded Nginx process.
+#   Updated server configurations in '/etc/nginx/conf.d'; reloaded Nginx process.
 #=======================================================================================================================
 reload_nginx_on_change() {
     prev_incoming_checksum=$(find -L "${NGINX_TEMPLATES_DIR}" -type f \( -iname \*.template -o -iname \*.conf \) \
@@ -122,14 +121,7 @@ reload_nginx_on_change() {
 
         # scan for any new templates or certificates
         current_config=$(cd "${NGINX_CONF_DIR}" && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
-        current_snippets=$(cd "${NGINX_SNIPPETS_DIR}" && find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
-        if [ -d "${NGINX_TEMPLATES_DIR}"/snippets ]; then
-            snippet_config=$(cd "${NGINX_TEMPLATES_DIR}"/snippets && \
-                find -L ./*.conf -type f -maxdepth 1 2>/dev/null | sort)
-        else
-            snippet_config=''
-        fi
-        template_config=$(cd "${NGINX_TEMPLATES_DIR}" && find -L ./*.template -type f -maxdepth 1 2>/dev/null | \
+        template_config=$(cd "${NGINX_TEMPLATES_DIR}" && find -L ./*.template -type f -maxdepth 2 2>/dev/null | \
             sed -e "s/.template//" | sort)
         new_incoming_checksum=$(find -L "${NGINX_TEMPLATES_DIR}" -type f \( -iname \*.template -o -iname \*.conf \) \
             -exec md5sum {} \; -maxdepth 2 2>/dev/null | sort)
@@ -137,14 +129,11 @@ reload_nginx_on_change() {
 
         # generate new configuration on any new/changed templates and reload nginx
         if  [ "${current_config}" != "${template_config}" ] || \
-            [ "${current_snippets}" != "${snippet_config}" ] || \
             [ "${new_incoming_checksum}" != "${prev_incoming_checksum}" ]; then
 
             log "Changes detected, reconfiguring sites"
             # remove existing configurations
-            rm -rf "${NGINX_CONF_DIR}"/*.conf "${NGINX_SNIPPETS_DIR}"/*.conf || true
-            # copy incoming snippets
-            \cp -r "${NGINX_TEMPLATES_DIR}"/snippets/*.conf "${NGINX_SNIPPETS_DIR}"/ 2>/dev/null || true
+            rm -rf "${NGINX_CONF_DIR}"/*.conf  || true
             # regenerate configurations based on templates and update checksum
             "${NGINX_TEMPLATE_CMD}"
             prev_incoming_checksum="${new_incoming_checksum}"
