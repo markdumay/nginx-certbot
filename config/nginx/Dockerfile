@@ -4,18 +4,19 @@
 #======================================================================================================================
 # Build arguments
 #======================================================================================================================
-ARG UID=1001
-ARG GID=1001
+ARG BUILD_UID=1001
+ARG BUILD_GID=1001
 ARG BUILD_USER='www'
 ARG BUILD_FLAGS=''
 ARG BUILD_VERSION
 ARG BUILD_TARGET='test'
+ARG NGINX_VERSION
 
 
 #======================================================================================================================
 # Main image
 #======================================================================================================================
-FROM nginx:1.19.6-alpine
+FROM nginx:"${NGINX_VERSION}"-alpine
 
 ARG BUILD_VERSION
 ENV BUILD_VERSION "${BUILD_VERSION}"
@@ -29,8 +30,8 @@ COPY ./config/nginx/templates /etc/nginx/templates
 COPY ./config/nginx/index.html /var/www/html/index.html 
 
 # Harden the image and assign access rights for key files and folders
-ARG UID
-ARG GID
+ARG BUILD_UID
+ARG BUILD_GID
 ARG BUILD_USER
 ARG BUILD_FLAGS
 ARG BUILD_TARGET
@@ -42,8 +43,8 @@ RUN apk update -f && \
     /usr/local/sbin/harden_alpine.sh harden \
         -U nginx \
         -n "${BUILD_USER}" \
-        -u "${UID}" \
-        -g "${GID}" \
+        -u "${BUILD_UID}" \
+        -g "${BUILD_GID}" \
         -v /etc/letsencrypt \
         -v /etc/nginx/templates \
         -d /tmp \

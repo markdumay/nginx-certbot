@@ -37,8 +37,8 @@ services:
     secrets:
       - source: dns_cloudflare_api_token
         target: dns_cloudflare_api_token
-        uid: "${UID}"
-        gid: "${GID}"
+        uid: "${BUILD_UID}"
+        gid: "${BUILD_GID}"
         mode: 0440 # TODO: check correct secret mode
 
   nginx:

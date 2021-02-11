@@ -13,11 +13,12 @@ services:
       context: .
       args:
         BUILD_VERSION: "${BUILD_VERSION}"
-        UID: "${UID}"
-        GID: "${GID}"
-        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+        BUILD_UID: "${BUILD_UID}"
+        BUILD_GID: "${BUILD_GID}"
         BUILD_FLAGS: --add-shell
         BUILD_TARGET: test
+        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+        CERTBOT_VERSION: "${CERTBOT_VERSION}"
 
   nginx:
     build:
@@ -25,7 +26,8 @@ services:
       context: .
       args:
         BUILD_VERSION: "${BUILD_VERSION}"
-        UID: "${UID}"
-        GID: "${GID}"
+        BUILD_UID: "${BUILD_UID}"
+        BUILD_GID: "${BUILD_GID}"
         BUILD_FLAGS: --add-shell -k nginx-debug
         BUILD_TARGET: test
+        NGINX_VERSION: "${NGINX_VERSION}"

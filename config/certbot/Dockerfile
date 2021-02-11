@@ -5,19 +5,19 @@
 # Build arguments
 #======================================================================================================================
 ARG CERTBOT_DNS_PLUGIN
-ARG UID=1001
-ARG GID=1001
+ARG BUILD_UID=1001
+ARG BUILD_GID=1001
 ARG BUILD_USER='certbot'
 ARG BUILD_FLAGS=''
 ARG BUILD_VERSION
 ARG BUILD_TARGET='test'
-
+ARG CERTBOT_VERSION
 
 #======================================================================================================================
 # Main image
 #======================================================================================================================
 # Pull base image for specified DNS plugin
-FROM certbot/dns-${CERTBOT_DNS_PLUGIN}
+FROM certbot/dns-"${CERTBOT_DNS_PLUGIN}":v"${CERTBOT_VERSION}"
 
 ARG BUILD_VERSION
 ENV BUILD_VERSION "${BUILD_VERSION}"
@@ -29,8 +29,8 @@ COPY ./config/certbot/docker_entrypoint.sh /usr/local/sbin/docker_entrypoint.sh
 
 # Harden the image and assign access rights for key files and folders
 # Note: chmod is needed by certbot_issue.sh
-ARG UID
-ARG GID
+ARG BUILD_UID
+ARG BUILD_GID
 ARG BUILD_USER
 ARG BUILD_FLAGS
 ARG CERTBOT_DNS_PLUGIN
@@ -43,8 +43,8 @@ RUN apk update -f && \
     chmod +x /usr/local/sbin/harden_alpine.sh && \
     /usr/local/sbin/harden_alpine.sh harden \
         -n "${BUILD_USER}" \
-        -u "${UID}" \
-        -g "${GID}" \
+        -u "${BUILD_UID}" \
+        -g "${BUILD_GID}" \
         -v /etc/certbot \
         -d "/home/${BUILD_USER}" \
         -d /tmp \

@@ -8,11 +8,12 @@ services:
       context: .
       args:
         BUILD_VERSION: "${BUILD_VERSION}"
-        UID: "${UID}"
-        GID: "${GID}"
-        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+        BUILD_UID: "${BUILD_UID}"
+        BUILD_GID: "${BUILD_GID}"
         BUILD_FLAGS: --add-shell --read-only
         BUILD_TARGET: production
+        CERTBOT_DNS_PLUGIN: "${CERTBOT_DNS_PLUGIN}"
+        CERTBOT_VERSION: "${CERTBOT_VERSION}"
     read_only: true
     volumes:
       - type: tmpfs
@@ -43,10 +44,11 @@ services:
       context: .
       args:
         BUILD_VERSION: "${BUILD_VERSION}"
-        UID: "${UID}"
-        GID: "${GID}"
+        BUILD_UID: "${BUILD_UID}"
+        BUILD_GID: "${BUILD_GID}"
         BUILD_FLAGS: --add-shell --read-only
         BUILD_TARGET: production
+        NGINX_VERSION: "${NGINX_VERSION}"
     read_only: true
     volumes:
       - type: tmpfs
