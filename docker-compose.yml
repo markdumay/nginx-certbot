@@ -12,6 +12,7 @@ networks:
     driver_opts:
       encrypted: ""
   portal:
+    attachable: true
     driver_opts:
       encrypted: ""
 
