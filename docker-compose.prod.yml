@@ -29,6 +29,13 @@ services:
         delay: 30s
         max_attempts: 5
         window: 120s
+      resources:
+        limits:
+          cpus: "${CERTBOT_LIMIT_CPU}"
+          memory: "${CERTBOT_LIMIT_MEM}"
+        reservations:
+          cpus: "${CERTBOT_RESERVATION_CPU}"
+          memory: "${CERTBOT_RESERVATION_MEM}"
 
   nginx:
     build:
@@ -54,3 +61,10 @@ services:
         delay: 30s
         max_attempts: 5
         window: 120s
+      resources:
+        limits:
+          cpus: "${NGINX_LIMIT_CPU}"
+          memory: "${NGINX_LIMIT_MEM}"
+        reservations:
+          cpus: "${NGINX_RESERVATION_CPU}"
+          memory: "${NGINX_RESERVATION_MEM}"
