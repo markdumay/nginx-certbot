@@ -14,6 +14,8 @@ services:
         BUILD_FLAGS: --add-shell --read-only
         BUILD_TARGET: production
     read_only: true
+    security_opt:
+      - no-new-privileges
     volumes:
       - type: tmpfs
         target: /home/certbot
@@ -48,6 +50,8 @@ services:
         BUILD_FLAGS: --add-shell --read-only
         BUILD_TARGET: production
     read_only: true
+    security_opt:
+      - no-new-privileges
     volumes:
       - type: tmpfs
         target: /tmp
