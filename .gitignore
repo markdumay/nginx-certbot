@@ -16,3 +16,6 @@ log/
 
 # Temporary helper script
 ddm.sh
+
+# Visual Studio Code configuration
+.vscode
