@@ -54,7 +54,6 @@ RUN apk update -f && \
         -f /usr/local/sbin/docker_entrypoint.sh \
         -f /etc/nginx/nginx.conf \
         -f /etc/nginx/snippets/ffdhe2048.txt \
-        -f /etc/nginx/templates \
         -f /var/www/html/index.html \
         -k nginx \
         "${BUILD_FLAGS}" && \
