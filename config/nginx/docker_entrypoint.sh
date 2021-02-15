@@ -4,8 +4,8 @@
 # Description   : Launches Nginx using server configuration templates. The execution starts once certificates are
 #                 available. Nginx is reloaded automatically on updated templates or certificates.
 # Author        : Mark Dumay
-# Date          : February 11th, 2021
-# Version       : 0.9
+# Date          : February 15th, 2021
+# Version       : 0.9.1
 # Usage         : docker-entrypoint.sh
 # Repository    : https://github.com/markdumay/nginx-certbot
 # Comments      :
@@ -20,7 +20,7 @@ readonly ENTRYPOINT_PATH='/docker-entrypoint.d'
 readonly NGINX_CONF_DIR='/var/lib/nginx/conf.d'
 readonly NGINX_TEMPLATES_DIR='/etc/nginx/templates'
 readonly NGINX_TEMPLATE_CMD='/docker-entrypoint.d/20-envsubst-on-templates.sh'
-readonly RW_DIRS='/etc/letsencrypt /etc/nginx/templates /tmp /var/lib/nginx/conf.d /var/cache/nginx'
+readonly RW_DIRS='/etc/nginx/templates /tmp /var/lib/nginx/conf.d /var/cache/nginx'
 
 
 #=======================================================================================================================
