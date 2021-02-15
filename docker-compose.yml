@@ -9,16 +9,20 @@ secrets:
 
 networks:
   certbot:
+    name: proxy_certbot
     driver_opts:
       encrypted: ""
   portal:
+    name: proxy_portal
     attachable: true
     driver_opts:
       encrypted: ""
 
 volumes:
   certs:
+    name: proxy_certs
   templates:
+    name: proxy_templates
 
 services:
   certbot:
