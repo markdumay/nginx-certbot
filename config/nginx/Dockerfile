@@ -50,7 +50,6 @@ RUN apk update -f && \
         -d /tmp \
         -d /var/lib/nginx/conf.d \
         -d /var/cache/nginx \
-        # -d /etc/nginx/snippets \
         -f /usr/local/sbin/docker_entrypoint.sh \
         -f /etc/nginx/nginx.conf \
         -f /etc/nginx/snippets/ffdhe2048.txt \
@@ -59,16 +58,17 @@ RUN apk update -f && \
         "${BUILD_FLAGS}" && \
     rm -f /usr/local/sbin/harden_alpine.sh 
 
+
 # Run the container as non-root user
 USER "${BUILD_USER}"
 
 # Define mountable directories (shared with certbot and other containers)
-VOLUME [ "/etc/letsencrypt", "/etc/nginx/templates" ]
+VOLUME [ "/etc/nginx/templates" ]
 
 # Define the healthcheck (production only)
 ARG BUILD_TARGET
 HEALTHCHECK --interval=1m30s --timeout=10s --retries=3 --start-period=1m \
-    CMD if [[ "${BUILD_TARGET}" == 'production' ]]; then curl --fail "localhost:${NGINX_PORT_HTTP}"; else exit 0; fi
+    CMD if [ "${BUILD_TARGET}" = 'production' ]; then curl --fail "localhost:${NGINX_PORT_HTTP}"; else exit 0; fi
 
 # Start custom script:
 #  - configure nginx using templates
