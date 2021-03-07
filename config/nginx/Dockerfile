@@ -35,11 +35,12 @@ ARG BUILD_GID
 ARG BUILD_USER
 ARG BUILD_FLAGS
 ARG BUILD_TARGET
-RUN apk update -f && \
-    apk --no-cache add -f shadow && \
-    rm -rf /var/cache/apk/* /var/cache/nginx /tmp && \
-    chmod +x /usr/local/sbin/docker_entrypoint.sh && \
-    chmod +x /usr/local/sbin/harden_alpine.sh && \
+RUN set -eu; \
+    apk update -f; \
+    apk --no-cache add -f shadow; \
+    rm -rf /var/cache/apk/* /var/cache/nginx /tmp; \
+    chmod +x /usr/local/sbin/docker_entrypoint.sh; \
+    chmod +x /usr/local/sbin/harden_alpine.sh; \
     /usr/local/sbin/harden_alpine.sh harden \
         -U nginx \
         -n "${BUILD_USER}" \
@@ -55,7 +56,7 @@ RUN apk update -f && \
         -f /etc/nginx/snippets/ffdhe2048.txt \
         -f /var/www/html/index.html \
         -k nginx \
-        "${BUILD_FLAGS}" && \
+        "${BUILD_FLAGS}"; \
     rm -f /usr/local/sbin/harden_alpine.sh 
 
 

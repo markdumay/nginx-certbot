@@ -35,12 +35,13 @@ ARG BUILD_USER
 ARG BUILD_FLAGS
 ARG CERTBOT_DNS_PLUGIN
 
-RUN apk update -f && \
-    apk --no-cache add -f grep shadow && \
-    rm -rf /var/cache/apk/* /tmp && \
-    chmod +x /usr/local/sbin/certbot_issue.sh && \
-    chmod +x /usr/local/sbin/docker_entrypoint.sh && \
-    chmod +x /usr/local/sbin/harden_alpine.sh && \
+RUN set -eu; \
+    apk update -f; \
+    apk --no-cache add -f grep shadow; \
+    rm -rf /var/cache/apk/* /tmp; \
+    chmod +x /usr/local/sbin/certbot_issue.sh; \
+    chmod +x /usr/local/sbin/docker_entrypoint.sh; \
+    chmod +x /usr/local/sbin/harden_alpine.sh; \
     /usr/local/sbin/harden_alpine.sh harden \
         -n "${BUILD_USER}" \
         -u "${BUILD_UID}" \
@@ -53,7 +54,7 @@ RUN apk update -f && \
         -f /usr/local/sbin/certbot_issue.sh \
         -f /usr/local/sbin/docker_entrypoint.sh \
         -k chmod \
-        "${BUILD_FLAGS}" && \
+        "${BUILD_FLAGS}"; \
     rm -f /usr/local/sbin/harden_alpine.sh
 
 # Run the container as non-root user
